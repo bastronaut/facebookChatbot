@@ -18,5 +18,20 @@ def verify():
     else:
         return 'Error, wrong validation token'
 
+
+@app.route('/', methods=['POST'])
+def webhook():
+    payload = request.get_data()
+    for sender, message in messenger.messaging_events(payload):
+        print "Incoming from %s: %s" % (sender, message)
+
+        response = bot.respond_to(message)
+
+        print "Outgoing to %s: %s" % (sender, response)
+        messenger.send_message(FACEBOOK_TOKEN, sender, response)
+
+    return "ok"
+
+
 if __name__ == "__main__":
     app.run(debug=True)
