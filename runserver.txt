@@ -1,0 +1,17 @@
+uwsgi -s fbchatbot.sock --http 0.0.0.0:5002 --module wsgi --callable app
+# or:
+sudo start fbchatbot
+
+### /etc/init/fbchatbot :
+description "uWSGI server instance configured to serve fbchatbot"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+#setuid bas
+#setgid www-data
+
+env PATH=/home/bas/facebookChatbot/facebookChatbotenv/bin
+chdir /home/bas/facebookChatbot
+exec uwsgi --ini fbchatbot.ini --chmod-socket=666 --callable app
+
