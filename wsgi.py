@@ -1,5 +1,5 @@
 from server import app
 
 if __name__ == "__main__":
-    print 'yes!'
+    print 'starting from wsgi.py..'
     app.run()
