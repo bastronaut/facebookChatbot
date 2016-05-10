@@ -18,7 +18,7 @@ class ResponseBuilder:
 
     # Keeps track of the state of different conversations, so different people
     # can talk to the bot at the same time without the chat intermingling a
-    # response.MessageProtocolEntity.getFrom() will be key.The most recent
+    # response.messageEntity.getFrom() will be key.The most recent
     # interaction with the bot will be tracked to figure out if the conversation
     # has timed out and should be reset. Finally, it tracks how far into the
     # conversation they are.
@@ -194,11 +194,11 @@ class ResponseBuilder:
 
     # Function entry point for layer clas. Side effect for getting responses:
     # has to maintain a state of the current conversation. Probably not scaleable
-    def getResponsesForMessage(self, messageProtocolEntity):
+    def getResponsesForMessage(self, messageEntity):
         returnResponses = []
-        messageSender = messageProtocolEntity.getFrom()
+        messageSender = messageEntity.getFrom()
         try:
-            message = messageProtocolEntity.getBody().lower()
+            message = messageEntity.getBody().lower()
         except Exception, e:
             logging.info(['Fail getBody, probably different msg Type (e.g. media). Error: ', e])
             return returnResponses
