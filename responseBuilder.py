@@ -7,7 +7,8 @@ import re
 import logging, sys
 
 class ResponseBuilder:
-    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+    # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+    logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     db = Db()
     messages = db.getMessages()
@@ -46,8 +47,14 @@ class ResponseBuilder:
     def findMessageQuestionMatches(self, incomingmessage):
         matches = []
         for message in self.messages:
-            if (re.search(r'\b' + message['qtext'] + r'\b', incomingmessage)):
+            loweredmessage = message['qtext'].lower()
+            if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)):
+                # print '\n\nRE match, appending', loweredmessage, incomingmessage, re.search(r'\b' + loweredmessage + r'\b', incomingmessage)
                 matches.append(message)
+            elif loweredmessage == incomingmessage:
+                # print 'exact match, appending', message
+                matches.append(message)
+        # print 'returning matches:', matches
         return matches
 
 
@@ -60,21 +67,64 @@ class ResponseBuilder:
 
 
     def isFollowUpQuestion(self, messageSender, question):
-        m_nrs = self.getm_nrsListForConvId(question['conv_id'])
+        m_nrs = self.getm_nrsAndis_alternativeForConvId(question['conv_id'])
         try:
             for convstate in self.conversationstates[messageSender]:
                 if convstate['conv_id'] == question['conv_id']:
-                    return question['m_nr'] == (convstate['mostrecentquestion'] + 1)
+                    if question['m_nr'] == (convstate['mostrecentquestion'] + 1):
+                        return True
+                    else:
+                        return self.testPreviousMessagesAreAlternatives(question['m_nr'], convstate['mostrecentquestion'], m_nrs)
         except Exception, e:
+            print 'exception, probably indexerror ', e
             return False
         return False
 
 
-    def getm_nrsListForConvId(self, conv_id):
-        m_nrs = []
+    # A message is a follow up question if the previous message is_alternative
+    # are true. Simplified example below, the m_nr of the questionmatch is 3.
+    # The m_nr before it, 2, have is_alternative set True. Continue until it
+    # checks all previous questions until it finds the most recent question = 1.
+    # Messages =
+    #  { "m_nr" : 1, "qtext" : "Hi", "rtext": "how are you?", "is_alternative" : False },
+    #  { "m_nr" : 2, "qtext" : "Good!", "rtext" : "Nice!", "is_alternative" : True },
+    #  { "m_nr" : 3, "qtext" : "Bad!", "rtext" : "Too bad", "is_alternative" : True}
+    #  { "m_nr" : 4, "qtext" : "You?", "rtext" : "Great!", "is_alternative" : False}
+    # This only goes if the questionmatch has is_alternative itself. For example,
+    # if the mostrecentquestion is 1, m_nr 4 will fail
+    def testPreviousMessagesAreAlternatives(this, m_nr, mostrecentquestion, m_nrs_isalternatives):
+        print 'm_nr:', m_nr, 'mrquestion:', mostrecentquestion, 'm_nrisalts:', m_nrs_isalternatives
+        # if the questionmatch is is_alternative itself, follow up does not hold
+        # see example above with m_nr = 4
+        # TODO: FIX PROBLEM WITH LOGIC: you can go from 1 to 4 and skip all is_alternatives
+        # if m_nrs_isalternatives[m_nr] == False:
+        #     return False
+
+        if m_nr <= mostrecentquestion:
+            return False
+
+        currentMessage = m_nr-1
+        while currentMessage > mostrecentquestion:
+            # print 'the currentmessage: ', currentMessage, mostrecentquestion
+            try:
+                if m_nrs_isalternatives[currentMessage] == True:
+                    currentMessage -= 1
+                    continue
+                else:
+                    print 'previous msg was not isalternative True, not a follow up:', currentMessage, ' - ', m_nrs_isalternatives[currentMessage-1]
+                    return False
+            except Exception, e:
+                print 'probably indexerror in testPreviousMessagesAreAlternatives:', e
+        print 'all previous messages are is_alternative, its a follow up!'
+        return True
+
+
+
+    def getm_nrsAndis_alternativeForConvId(self, conv_id):
+        m_nrs = {}
         for msg in self.messages:
             if conv_id == msg['conv_id']:
-                m_nrs.append(msg['m_nr'])
+                m_nrs[msg['m_nr']] =  msg['is_alternative']
         return m_nrs
 
 
@@ -92,7 +142,7 @@ class ResponseBuilder:
     # Logic of doom to check if a question requires a response
     # probably better with switch statement
     def shouldGetResponse(self, isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut):
-        logging.info([isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut])
+        # logging.info([isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut])
         if isFirstQuestion:
             if isUserRegisteredInConversationState:
                 if hasConversationTimedOut:
@@ -156,9 +206,10 @@ class ResponseBuilder:
         if message == self.resetmsg:
             self.reinitialize()
 
-        print 'incoming msg: ', message
+
 
         questionmatches = self.findMessageQuestionMatches(message)
+        # print '\nquestionmatches:\n', questionmatches
         if questionmatches:
             for question in questionmatches:
                 shouldGetResponseBool = self.shouldGetResponse(

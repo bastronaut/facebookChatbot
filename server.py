@@ -18,7 +18,9 @@ def verify():
 def webhook():
     print 'incoming msg!'
     payload = request.get_data()
-    print payload
+    print payload, '\n'
+    print payload.entry.messaging[0].recipient
+    print payload.entry.messaging[0].message.text
     return "ok"
 
 

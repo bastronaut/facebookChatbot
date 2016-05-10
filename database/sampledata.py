@@ -18,14 +18,14 @@ class Sampledata:
     ]
 
     messages = [
-     { "m_nr" : 1, "qtext" : "Hi there", "rtext" : "Hi! :) How are you?", "is_alternative" : False, "conv_id" : 1, "key" : 123 },
+     { "m_nr" : 1, "qtext" : "Hi", "rtext" : "Hi! :) How are you?", "is_alternative" : False, "conv_id" : 1, "key" : 123 },
      { "m_nr" : 2, "qtext" : "Good!", "rtext" : "That's great to hear!", "is_alternative" : True, "conv_id" : 1, "key" : 124 },
-     { "m_nr" : 2, "qtext" : "Bad!", "rtext" : "I'm sorry to hear that", "is_alternative" : True, "conv_id" : 1, "key" : 125 },
-     { "m_nr" : 2, "qtext" : "I'm OK!", "rtext" : "nice", "is_alternative" : True, "conv_id" : 1, "key" : 126 },
-     { "m_nr" : 3, "qtext" : "How about you?", "rtext" : "I'm doing just fine!", "is_alternative" : False, "conv_id" : 1, "key" : 127 },
+     { "m_nr" : 3, "qtext" : "Bad!", "rtext" : "I'm sorry to hear that", "is_alternative" : True, "conv_id" : 1, "key" : 125 },
+     { "m_nr" : 4, "qtext" : "OK", "rtext" : "nice", "is_alternative" : True, "conv_id" : 1, "key" : 126 },
+     { "m_nr" : 5, "qtext" : "How about you?", "rtext" : "I'm doing just fine!", "is_alternative" : False, "conv_id" : 1, "key" : 127 },
      { "m_nr" : 1, "qtext" : "Food", "rtext" : "Can I order you anything?", "is_alternative" : False, "conv_id" : 2, "key" : 128 },
      { "m_nr" : 2, "qtext" : "Pizza", "rtext" : "Ordering you a pizza as we speak!", "is_alternative" : True, "conv_id" : 2, "key" : 129 },
-     { "m_nr" : 2, "qtext" : "Burrito", "rtext" : "Ordering you a burrito as we speak!", "is_alternative" : True, "conv_id" : 2, "key" : 130 },
+     { "m_nr" : 3, "qtext" : "Burrito", "rtext" : "Ordering you a burrito as we speak!", "is_alternative" : True, "conv_id" : 2, "key" : 130 },
     ]
 
 

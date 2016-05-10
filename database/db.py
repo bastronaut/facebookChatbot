@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 from sampledata import Sampledata
-
+import pymongo
 
 '''
 responsible for getting the questions and responses from DB
@@ -81,13 +81,9 @@ class Db:
             return False
 
     def insertTestData(self):
-        # testquestions = self.sampledata.getQuestions()
-        # testresponses = self.sampledata.getResponses()
         testmessages = self.sampledata.getMessages()
         testconvs = self.sampledata.getConversations()
         print 'inserting...'
-        # self.db.questions.insert(testquestions)
-        # self.db.responses.insert(testresponses)
         self.db.messages.insert(testmessages)
         self.db.conversations.insert(testconvs)
 
@@ -95,3 +91,14 @@ class Db:
         print 'resetting...'
         self._clearDb()
         self.insertTestData()
+
+    def clearTestIncomingMsg(self):
+        self.db.testincomingmsgs.drop()
+
+    # simulating test incoming msgs, mongodb stores strings as unicode
+    def insertTestIncomingMsg(self, msg):
+        self.db.testincomingmsgs.insert(msg)
+
+    def getMostRecentTestIncomingMsg(self):
+        result = list(self.db.testincomingmsgs.find().sort([('$natural', pymongo.DESCENDING)]).limit(1))
+        return result[0]
