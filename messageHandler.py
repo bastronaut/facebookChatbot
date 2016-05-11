@@ -10,6 +10,7 @@ from messageEntity import MessageEntity
 
 class MessageHandler:
     db = Db()
+    responsebuilder = ResponseBuilder()
 
     def buildResponseForRequest(self, payload):
 
@@ -18,13 +19,13 @@ class MessageHandler:
 
         for event in messaging:
             if "message" in event and "text" in event["message"]:
-                messagesender = event["sender"]
+                messagesender = event["sender"]["id"]
                 messagetext = event["message"]["text"]
-                print 'sender: ', messagesender, ' text: ', messagetext'
+                print 'sender: ', messagesender, ' text: ', messagetext
                 messageEntity = MessageEntity(messagesender, messagetext)
                 self.db.storeIncomingMsg(messagesender, messagetext, timestamp)
 
-                responses = responsebuilder.getResponsesForMessage(messageEntity)
+                responses = self.responsebuilder.getResponsesForMessage(messageEntity)
                 if responses:
                     return {'messagesender' : messagesender, 'responsetext' : responses[0]["responseText"], 'timestamp': timestamp}
                 else:
@@ -39,8 +40,8 @@ class MessageHandler:
             "message": {"text": response.responsetext}
         }),
         headers={'Content-type': 'application/json'})
-    if r.status_code != requests.codes.ok:
-        print 'request codes not ok:', r.text
-    else:
-        print 'response done, inserting outgoing msg into db'
-        self.db.storeOutgoingMsg(response.messagesender, response.responsetext, response.timestamp)
+        if r.status_code != requests.codes.ok:
+            print 'request codes not ok:', r.text
+        else:
+            print 'response done, inserting outgoing msg into db'
+            self.db.storeOutgoingMsg(response.messagesender, response.responsetext, response.timestamp)
