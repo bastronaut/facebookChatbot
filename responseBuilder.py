@@ -64,6 +64,8 @@ class ResponseBuilder:
         return (messageSender in self.conversationstates)
 
 
+    # TODO: THIS FUNCTION HAS PROBLEMS WITH LOGIC. needs rethinking.
+    # Mostly OK for demo. rethink is_alternative flags
     def isFollowUpQuestion(self, messageSender, question):
         m_nrs = self.getm_nrsAndis_alternativeForConvId(question['conv_id'])
         try:
@@ -72,7 +74,12 @@ class ResponseBuilder:
                     if question['m_nr'] == (convstate['mostrecentquestion'] + 1):
                         return True
                     else:
-                        return self.testPreviousMessagesAreAlternatives(question['m_nr'], convstate['mostrecentquestion'], m_nrs)
+                        return True
+                        # arePrevMessagesAlternatives = self.arePreviousMessagesAlternatives(question['m_nr'], convstate['mostrecentquestion'], m_nrs)
+                        # if (arePrevMessagesAlternatives):
+                        #     return self.hasAlternativeQuestionBeenAsked(question['m_nr'], m_nrs)
+                        # else:
+                        #     return False
         except Exception, e:
             print 'exception, probably indexerror ', e
             return False
@@ -90,13 +97,10 @@ class ResponseBuilder:
     #  { "m_nr" : 4, "qtext" : "You?", "rtext" : "Great!", "is_alternative" : False}
     # This only goes if the questionmatch has is_alternative itself. For example,
     # if the mostrecentquestion is 1, m_nr 4 will fail
-    def testPreviousMessagesAreAlternatives(this, m_nr, mostrecentquestion, m_nrs_isalternatives):
+    def arePreviousMessagesAlternatives(this, m_nr, mostrecentquestion, m_nrs_isalternatives):
         print 'm_nr:', m_nr, 'mrquestion:', mostrecentquestion, 'm_nrisalts:', m_nrs_isalternatives
-        # if the questionmatch is is_alternative itself, follow up does not hold
-        # see example above with m_nr = 4
-        # TODO: FIX PROBLEM WITH LOGIC: you can go from 1 to 4 and skip all is_alternatives
-        # if m_nrs_isalternatives[m_nr] == False:
-        #     return False
+        # TODO Problem 1: you can go from 1 to 4 and skip all is_alternatives
+        previousMsgsAreAlternatives = False
 
         if m_nr <= mostrecentquestion:
             return False
@@ -106,15 +110,24 @@ class ResponseBuilder:
             try:
                 if m_nrs_isalternatives[currentMessage] == True:
                     currentMessage -= 1
+                    previousMsgsAreAlternatives = True
                     continue
                 else:
                     print 'previous msg was not isalternative True, not a follow up:', currentMessage, ' - ', m_nrs_isalternatives[currentMessage-1]
                     return False
             except Exception, e:
-                print 'probably indexerror in testPreviousMessagesAreAlternatives:', e
-        print 'all previous messages are is_alternative, its a follow up!'
-        return True
+                print 'probably indexerror in arePreviousMessagesAlternatives:', e
+        print 'all previous messages are is_alternative, its a follow up!', previousMsgsAreAlternatives
 
+        return previousMsgsAreAlternatives
+
+
+    # tests if at least one of the previous 'is_alternative' questions have
+    # been asked. if not, they were skipped and the example m_nr: 1 -> m_nr:4
+    # will return an unwarranted response
+    def hasAlternativeQuestionBeenAsked(this, m_nr, m_nrs_isalternatives):
+        print 'checking if alt questions have been asked'
+        return m_nrs_isalternatives[m_nr]
 
 
     def getm_nrsAndis_alternativeForConvId(self, conv_id):
