@@ -2,12 +2,6 @@ from pymongo import MongoClient
 from sampledata import Sampledata
 import pymongo
 
-'''
-responsible for getting the questions and responses from DB
-a question is: { id: int, text: string, conv_id: int}
-a response is : { id: int, text: string, conv_id: int, response_to: [{id: int}, {id: int} ]}
-'''
-
 class Db:
     env = 'prod'
     client = MongoClient()
@@ -102,3 +96,9 @@ class Db:
     def getMostRecentTestIncomingMsg(self):
         result = list(self.db.testincomingmsgs.find().sort([('$natural', pymongo.DESCENDING)]).limit(1))
         return result[0]
+
+    def storeIncomingMsg(self, messagesender, messagetext, timestamp):
+        self.db.incomingmessages.insert({'sender': messagesender, 'messagetext' : messagetext, 'timestamp' : timestamp})
+
+    def storeOutgoingMsg(self, messagesender, responsetext, timestamp):
+        self.db.outgoingmessages.insert({'sender': messagesender, 'responsetext' : responsetex, 'timestamp' : timestamp})

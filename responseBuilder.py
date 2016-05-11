@@ -7,18 +7,16 @@ import re
 import logging, sys
 
 class ResponseBuilder:
-    # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
-    # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stderr, level=logging.WARNING) # INFO, WARNING OR DEBUG
     db = Db()
     messages = db.getMessages()
     conversations = db.getConversations()
-    resetmsg = 'chatreset'
+    resetmsg = 'reload'
     conversationTimeoutThreshold = dt.timedelta(seconds=10)
 
     # Keeps track of the state of different conversations, so different people
     # can talk to the bot at the same time without the chat intermingling a
-    # response.messageEntity.getFrom() will be key.The most recent
+    # response. messageEntity.getFrom() will be key.The most recent
     # interaction with the bot will be tracked to figure out if the conversation
     # has timed out and should be reset. Finally, it tracks how far into the
     # conversation they are.
@@ -37,13 +35,13 @@ class ResponseBuilder:
     # }
     #
     # messages: [
-    #   { "m_nr" : 1, "qtext" : "hoi1", "rtext" : "doei 1", "is_alternative" : False, "conv_id" : 1 },
+    #   { "m_nr" : 1, "qtext" : "hoi1", "rtext" : "doei 1", "is_alternative" : False, "conv_id" : 1, "key" : 123 },
     #        ..]
 
     conversationstates = {}
 
     # searces through self.messages to find if the incoming message
-    # matches any of the preprogramming input
+    # matches any of the preprogrammed input
     def findMessageQuestionMatches(self, incomingmessage):
         matches = []
         for message in self.messages:
@@ -105,7 +103,6 @@ class ResponseBuilder:
 
         currentMessage = m_nr-1
         while currentMessage > mostrecentquestion:
-            # print 'the currentmessage: ', currentMessage, mostrecentquestion
             try:
                 if m_nrs_isalternatives[currentMessage] == True:
                     currentMessage -= 1
@@ -192,7 +189,7 @@ class ResponseBuilder:
         self.messages = db.getMessages()
 
 
-    # Function entry point for layer clas. Side effect for getting responses:
+    # Function entry point for class. Side effect for getting responses:
     # has to maintain a state of the current conversation. Probably not scaleable
     def getResponsesForMessage(self, messageEntity):
         returnResponses = []
@@ -223,4 +220,5 @@ class ResponseBuilder:
                     isConvStateUpdated = self.updateConversationState(messageSender, question)
                     print 'response: ', response, '\n conv state updated: ', isConvStateUpdated, '\n'
                     returnResponses.append({'responseText' : response})
+        print returnResponses
         return returnResponses
