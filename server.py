@@ -4,14 +4,15 @@ import json
 from responseBuilder import ResponseBuilder
 from messageEntity import MessageEntity
 from messageHandler import MessageHandler
-
+import credentials
 
 responsebuilder = ResponseBuilder()
 messageHandler = MessageHandler()
-TOKEN = 'testy'
+VERIFYTOKEN = credentials.VERIFYTOKEN
+AUTHTOKEN = credentials.AUTHTOKEN
 
 @app.route('/fbchatbot/', methods=['GET'])
-def verify():
+def verify():sudo servi
     if request.args.get('hub.verify_token', '') == TOKEN:
         print 'verify token sent'
         return request.args.get('hub.challenge', '')
