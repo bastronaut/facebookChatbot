@@ -33,15 +33,16 @@ class MessageHandler:
 
 
     def sendResponse(self, response, token):
+        print 'building response for:\n', response
         r = requests.post("https://graph.facebook.com/v2.6/me/messages",
         params={"access_token": token},
         data=json.dumps({
-            "recipient": {"id": response.messagesender},
-            "message": {"text": response.responsetext}
+            "recipient": {"id": response["messagesender"]},
+            "message": {"text": response["responsetext"]}
         }),
         headers={'Content-type': 'application/json'})
         if r.status_code != requests.codes.ok:
             print 'request codes not ok:', r.text
         else:
             print 'response done, inserting outgoing msg into db'
-            self.db.storeOutgoingMsg(response.messagesender, response.responsetext, response.timestamp)
+            self.db.storeOutgoingMsg(response["messagesender"], response["responsetext"], response["timestamp"])

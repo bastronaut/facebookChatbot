@@ -8,6 +8,7 @@ from messageHandler import MessageHandler
 
 responsebuilder = ResponseBuilder()
 messageHandler = MessageHandler()
+TOKEN = 'testy'
 
 @app.route('/fbchatbot/', methods=['GET'])
 def verify():
@@ -25,11 +26,13 @@ def webhook():
 
     response = messageHandler.buildResponseForRequest(payload)
 
-    if responses:
-        messageHandler.sendResponse(response, token)
+    if response:
+        messageHandler.sendResponse(response, TOKEN)
         print 'sending response!'
     else:
         print 'no response was send.'
+
+    return 'ok'
 
 
 
