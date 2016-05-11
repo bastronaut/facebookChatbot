@@ -12,8 +12,8 @@ VERIFYTOKEN = credentials.VERIFYTOKEN
 AUTHTOKEN = credentials.AUTHTOKEN
 
 @app.route('/fbchatbot/', methods=['GET'])
-def verify():sudo servi
-    if request.args.get('hub.verify_token', '') == TOKEN:
+def verify():
+    if request.args.get('hub.verify_token', '') == VERIFYTOKEN:
         print 'verify token sent'
         return request.args.get('hub.challenge', '')
     else:
@@ -28,7 +28,7 @@ def webhook():
     response = messageHandler.buildResponseForRequest(payload)
 
     if response:
-        messageHandler.sendResponse(response, TOKEN)
+        messageHandler.sendResponse(response, AUTHTOKEN)
         print 'sending response!'
     else:
         print 'no response was send.'
