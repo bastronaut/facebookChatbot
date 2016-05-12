@@ -46,3 +46,4 @@ class MessageHandler:
         else:
             print 'response done, inserting outgoing msg into db'
             self.db.storeOutgoingMsg(response["messagesender"], response["responsetext"], response["timestamp"])
+        return 'ok'

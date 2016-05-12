@@ -11,7 +11,7 @@ class ResponseBuilder:
     db = Db()
     messages = db.getMessages()
     conversations = db.getConversations()
-    resetmsg = 'reload'
+    resetmsg = 'chatreset'
     conversationTimeoutThreshold = dt.timedelta(seconds=10)
 
     # Keeps track of the state of different conversations, so different people
@@ -191,15 +191,16 @@ class ResponseBuilder:
 
     def resetSendersConversationState(self, messageSender):
         try:
-            return(self.conversationstates.pop(messageSender, True))
+            self.conversationstates[messageSender] = []
         except Exception, e:
             logging.info('User did not have conversationstate to reset')
             return False
 
 
-    def reinitialize(self):
+    def reinitialize(self, messageSender):
         logging.info('Resetting. Fetching questions and responses from DB...')
-        self.messages = db.getMessages()
+        self.messages = self.db.getMessages()
+        resetSendersConversationState(messageSender)
 
 
     # Function entry point for class. Side effect for getting responses:
@@ -214,7 +215,7 @@ class ResponseBuilder:
             return returnResponses
 
         if message == self.resetmsg:
-            self.reinitialize()
+            self.reinitialize(messageSender)
 
 
 

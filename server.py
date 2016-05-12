@@ -28,11 +28,10 @@ def webhook():
     response = messageHandler.buildResponseForRequest(payload)
 
     if response:
-        messageHandler.sendResponse(response, AUTHTOKEN)
         print 'sending response!'
+        messageHandler.sendResponse(response, AUTHTOKEN)
     else:
         print 'no response was send.'
-
     return 'ok'
 
 

@@ -101,4 +101,4 @@ class Db:
         self.db.incomingmessages.insert({'sender': messagesender, 'messagetext' : messagetext, 'timestamp' : timestamp})
 
     def storeOutgoingMsg(self, messagesender, responsetext, timestamp):
-        self.db.outgoingmessages.insert({'sender': messagesender, 'responsetext' : responsetex, 'timestamp' : timestamp})
+        self.db.outgoingmessages.insert({'sender': messagesender, 'responsetext' : responsetext, 'timestamp' : timestamp})
