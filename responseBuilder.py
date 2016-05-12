@@ -7,7 +7,7 @@ import re
 import logging, sys
 
 class ResponseBuilder:
-    logging.basicConfig(stream=sys.stderr, level=logging.WARNING) # INFO, WARNING OR DEBUG
+    logging.basicConfig(stream=sys.stderr, level=logging.INFO) # INFO, WARNING OR DEBUG
     db = Db()
     messages = db.getMessages()
     conversations = db.getConversations()
@@ -200,7 +200,7 @@ class ResponseBuilder:
     def reinitialize(self, messageSender):
         logging.info('Resetting. Fetching questions and responses from DB...')
         self.messages = self.db.getMessages()
-        resetSendersConversationState(messageSender)
+        self.resetSendersConversationState(messageSender)
 
 
     # Function entry point for class. Side effect for getting responses:
