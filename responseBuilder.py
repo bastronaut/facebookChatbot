@@ -57,6 +57,7 @@ class ResponseBuilder:
 
 
     def isFirstQuestion(self, question):
+        print ' the question:',
         return (question['m_nr'] == 1)
 
 
@@ -139,12 +140,19 @@ class ResponseBuilder:
 
 
     def hasConversationTimedOut(self, messageSender, question):
+        print '##########has conv timed out\n'
         try:
             for convstate in self.conversationstates[messageSender]:
                 if convstate['conv_id'] == question['conv_id']:
                     currenttime = datetime.utcnow()
-                    return (currenttime - convstate['mostrecentinteraction']) > self.conversationTimeoutThreshold
+                    print 'checkign it...', convstate
+                    print currenttime - convstate['mostrecentinteraction'], self.conversationTimeoutThreshold
+                    return ((currenttime - convstate['mostrecentinteraction']) > self.conversationTimeoutThreshold)
+                else:
+                    print 'idunno wots going on'
+                    print convstate['conv_id'], question['conv_id'], convstate['conv_id'] == question['conv_id']
         except Exception, e:
+            print 'exception:', e
             return False
         return False
 
@@ -152,10 +160,14 @@ class ResponseBuilder:
     # Logic of doom to check if a question requires a response
     # probably better with switch statement
     def shouldGetResponse(self, isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut):
-        # logging.info([isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut])
+        print ' in de war'
+        logging.info([isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut])
         if isFirstQuestion:
+            print 'is first q'
             if isUserRegisteredInConversationState:
+                print 'user regsitered conv state'
                 if hasConversationTimedOut:
+                    print 'conv has timed out'
                     return True
                 else:
                     return False # TODO hmm, ask for a reset?
@@ -180,12 +192,12 @@ class ResponseBuilder:
                     return True
             # The conversation_id conv_id had no record in the conv state yet, add it
             self.conversationstates[messageSender].append({'conv_id' : question['conv_id'],
-            'timestamp' : datetime.utcnow(), 'mostrecentquestion': question['m_nr']})
+            'mostrecentinteraction' : datetime.utcnow(), 'mostrecentquestion': question['m_nr']})
             return True
         # First registration of record for messageSender
         else:
             self.conversationstates[messageSender] = [{'conv_id' : question['conv_id'],
-            'timestamp' : datetime.utcnow(), 'mostrecentquestion': question['m_nr']}]
+            'mostrecentinteraction' : datetime.utcnow(), 'mostrecentquestion': question['m_nr']}]
             return True
 
 
@@ -217,22 +229,25 @@ class ResponseBuilder:
         if message == self.resetmsg:
             self.reinitialize(messageSender)
 
-
-
         questionmatches = self.findMessageQuestionMatches(message)
-        # print '\nquestionmatches:\n', questionmatches
+        print '\nquestionmatches:\n', questionmatches
         if questionmatches:
             for question in questionmatches:
+                print ' question! heir!', question
                 shouldGetResponseBool = self.shouldGetResponse(
                 self.isFirstQuestion(question),
                 self.isUserRegisteredInConversationState(messageSender),
                 self.isFollowUpQuestion(messageSender, question),
                 self.hasConversationTimedOut(messageSender, question)
                 )
+                print 'shouldGetResponseBool:', shouldGetResponseBool
                 if shouldGetResponseBool:
+                    print 'shud get response'
                     response = question['rtext']
                     isConvStateUpdated = self.updateConversationState(messageSender, question)
                     print 'response: ', response, '\n conv state updated: ', isConvStateUpdated, '\n'
                     returnResponses.append({'responseText' : response})
+                else:
+                    print 'shud not get response'
         print returnResponses
         return returnResponses
