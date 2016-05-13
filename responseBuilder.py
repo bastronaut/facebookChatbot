@@ -57,8 +57,12 @@ class ResponseBuilder:
 
 
     def isFirstQuestion(self, question):
-        print ' the question:',
-        return (question['m_nr'] == 1)
+        m_nrs = self.getm_nrsForConvId(question['conv_id'])
+        try:
+            return question['m_nr'] == m_nrs[0]
+        except Exception, e:
+            print 'isFirstQ fail:', e
+            return False
 
 
     def isUserRegisteredInConversationState(self, messageSender):
@@ -139,18 +143,20 @@ class ResponseBuilder:
         return m_nrs
 
 
+    def getm_nrsForConvId(self, conv_id):
+        m_nrs = []
+        for msg in self.messages:
+            if msg['conv_id'] == conv_id:
+                m_nrs.append(msg['m_nr'])
+        return sorted(m_nrs)
+
+
     def hasConversationTimedOut(self, messageSender, question):
-        print '##########has conv timed out\n'
         try:
             for convstate in self.conversationstates[messageSender]:
                 if convstate['conv_id'] == question['conv_id']:
                     currenttime = datetime.utcnow()
-                    print 'checkign it...', convstate
-                    print currenttime - convstate['mostrecentinteraction'], self.conversationTimeoutThreshold
                     return ((currenttime - convstate['mostrecentinteraction']) > self.conversationTimeoutThreshold)
-                else:
-                    print 'idunno wots going on'
-                    print convstate['conv_id'], question['conv_id'], convstate['conv_id'] == question['conv_id']
         except Exception, e:
             print 'exception:', e
             return False
@@ -160,14 +166,10 @@ class ResponseBuilder:
     # Logic of doom to check if a question requires a response
     # probably better with switch statement
     def shouldGetResponse(self, isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut):
-        print ' in de war'
         logging.info([isFirstQuestion, isUserRegisteredInConversationState, isFollowUpQuestion, hasConversationTimedOut])
         if isFirstQuestion:
-            print 'is first q'
             if isUserRegisteredInConversationState:
-                print 'user regsitered conv state'
                 if hasConversationTimedOut:
-                    print 'conv has timed out'
                     return True
                 else:
                     return False # TODO hmm, ask for a reset?
@@ -215,6 +217,23 @@ class ResponseBuilder:
         self.resetSendersConversationState(messageSender)
 
 
+    def replaceEscapedCharacters(self, message):
+      escapedMessage = self.escapeTextPattern(message, '$', '&#36;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '<', '&#60')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '>', '&#62;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '\'', '&#39;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '\"', '&#34;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '\\', '&#92;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '\/', '&#47;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '[', '&#91;')
+      print '\n## the escaped msg:', escapedMessage
+      return escapedMessage
+
+
+    def escapeTextPattern(self, input, pattern, replacewith):
+        return input.replace(pattern, replacewith)
+
+
     # Function entry point for class. Side effect for getting responses:
     # has to maintain a state of the current conversation. Probably not scaleable
     def getResponsesForMessage(self, messageEntity):
@@ -228,6 +247,8 @@ class ResponseBuilder:
 
         if message == self.resetmsg:
             self.reinitialize(messageSender)
+
+        message = self.replaceEscapedCharacters(message)
 
         questionmatches = self.findMessageQuestionMatches(message)
         print '\nquestionmatches:\n', questionmatches
