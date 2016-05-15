@@ -251,6 +251,7 @@ class ResponseBuilder:
             for convstate in self.conversationstates[messageSender]:
                 if convstate['conv_id'] == question['conv_id']:
                     currenttime = datetime.utcnow()
+                    print 'has conversation timed out:', ((currenttime - convstate['mostrecentinteraction']) > self.conversationTimeoutThreshold)
                     return ((currenttime - convstate['mostrecentinteraction']) > self.conversationTimeoutThreshold)
         except Exception, e:
             print 'exception:', e
@@ -300,7 +301,8 @@ class ResponseBuilder:
 
     def resetSendersConversationState(self, messageSender):
         try:
-            self.conversationstates[messageSender] = []
+            del self.conversationstates[messageSender]
+            print 'conv state for user reset:', messageSender
         except Exception, e:
             logging.info('User did not have conversationstate to reset')
             return False
@@ -342,6 +344,7 @@ class ResponseBuilder:
 
         if message == self.resetmsg:
             self.reinitialize(messageSender)
+            return False
 
         message = self.replaceEscapedCharacters(message)
 
