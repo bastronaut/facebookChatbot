@@ -26,4 +26,4 @@ while True:
     msgentity = SampleMessageProtocolEntity(testmsg['sender'], testmsg['message'])
     response = rb.getResponsesForMessage(msgentity)
     if not response:
-        print 'no response for input ', incomingmsg
+        print 'no response for input ', incomingmsg, '\n'
