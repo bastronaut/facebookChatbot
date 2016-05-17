@@ -222,10 +222,11 @@ class ResponseBuilder:
       escapedMessage = self.escapeTextPattern(escapedMessage, '<', '&#60')
       escapedMessage = self.escapeTextPattern(escapedMessage, '>', '&#62;')
       escapedMessage = self.escapeTextPattern(escapedMessage, '\'', '&#39;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '\"', '&#34;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '"', '&#34;')
       escapedMessage = self.escapeTextPattern(escapedMessage, '\\', '&#92;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '\/', '&#47;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '/', '&#47;')
       escapedMessage = self.escapeTextPattern(escapedMessage, '[', '&#91;')
+      escapedMessage = self.escapeTextPattern(escapedString, ':', '&#58;')
       print '\n## the escaped msg:', escapedMessage
       return escapedMessage
 
@@ -254,16 +255,13 @@ class ResponseBuilder:
         print '\nquestionmatches:\n', questionmatches
         if questionmatches:
             for question in questionmatches:
-                print ' question! heir!', question
                 shouldGetResponseBool = self.shouldGetResponse(
                 self.isFirstQuestion(question),
                 self.isUserRegisteredInConversationState(messageSender),
                 self.isFollowUpQuestion(messageSender, question),
                 self.hasConversationTimedOut(messageSender, question)
                 )
-                print 'shouldGetResponseBool:', shouldGetResponseBool
                 if shouldGetResponseBool:
-                    print 'shud get response'
                     response = question['rtext']
                     isConvStateUpdated = self.updateConversationState(messageSender, question)
                     print 'response: ', response, '\n conv state updated: ', isConvStateUpdated, '\n'
