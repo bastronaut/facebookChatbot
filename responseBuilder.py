@@ -12,7 +12,7 @@ class ResponseBuilder:
     messages = db.getMessages()
     conversations = db.getConversations()
     resetmsg = 'chatreset'
-    conversationTimeoutThreshold = dt.timedelta(seconds=10)
+    conversationTimeoutThreshold = dt.timedelta(seconds=3)
 
     # Keeps track of the state of different conversations, so different people
     # can talk to the bot at the same time without the chat intermingling a
@@ -37,11 +37,10 @@ class ResponseBuilder:
     # messages: [
     #   { "m_nr" : 1, "qtext" : "hoi1", "rtext" : "doei 1", "is_alternative" : False, "conv_id" : 1, "key" : 123 },
     #        ..]
-
     conversationstates = {}
 
     # searces through self.messages to find if the incoming message
-    # matches any of the preprogrammed input
+    # matches any of the user-programmed input
     def findMessageQuestionMatches(self, incomingmessage):
         matches = []
         for message in self.messages:
@@ -52,7 +51,6 @@ class ResponseBuilder:
             elif loweredmessage == incomingmessage:
                 # print 'exact match, appending', message
                 matches.append(message)
-        # print 'returning matches:', matches
         return matches
 
 
@@ -61,7 +59,7 @@ class ResponseBuilder:
         try:
             return question['m_nr'] == m_nrs[0]
         except Exception, e:
-            print 'isFirstQ fail:', e
+            print 'isFirstQuestion fail:', e
             return False
 
 
@@ -69,70 +67,92 @@ class ResponseBuilder:
         return (messageSender in self.conversationstates)
 
 
-    # TODO: THIS FUNCTION HAS PROBLEMS WITH LOGIC. needs rethinking.
-    # Mostly OK for demo. rethink is_alternative flags
+    # Logic from hell. Needs refactoring terribly!
+    # Because of is_alternative messages, checking whether a sent message is a
+    # follow up of the previously sent msg can be tricky.
+    # From a set of is_alternatives, only 1 of them should be said. Example
+    # below: After saying m_nr 1, m_nr 3 is aFollowUpQuestion. But, m_nr 2 is
+    # as well. But, m_nr 3 is not a follow up of m_nr 2.
+    # Additionally, m_nr 4 is a follow up of both m_nr 2 and m_nr 3
+    #
+    #  { "m_nr" : 1, "qtext" : "Hi", "is_alternative" : False, ... },
+    #  { "m_nr" : 2, "qtext" : "Good!", "is_alternative" : True, ... },
+    #  { "m_nr" : 3, "qtext" : "Bad!", is_alternative" : True, ...}
+    #  { "m_nr" : 4, "qtext" : "You?", "is_alternative" : False, ...}
+    #
     def isFollowUpQuestion(self, messageSender, question):
-        m_nrs = self.getm_nrsAndis_alternativeForConvId(question['conv_id'])
-        try:
-            for convstate in self.conversationstates[messageSender]:
-                if convstate['conv_id'] == question['conv_id']:
-                    if question['m_nr'] == (convstate['mostrecentquestion'] + 1):
-                        return True
-                    else:
-                        return True
-                        # arePrevMessagesAlternatives = self.arePreviousMessagesAlternatives(question['m_nr'], convstate['mostrecentquestion'], m_nrs)
-                        # if (arePrevMessagesAlternatives):
-                        #     return self.hasAlternativeQuestionBeenAsked(question['m_nr'], m_nrs)
-                        # else:
-                        #     return False
-        except Exception, e:
-            print 'exception, probably indexerror ', e
-            return False
-        return False
+        sortedm_nrs = self.getm_nrsForConvId(question['conv_id'])
+        m_nrs_isalternatives = self.getm_nrsAndis_alternativeForConvId(question['conv_id'])
 
-
-    # A message is a follow up question if the previous message is_alternative
-    # are true. Simplified example below, the m_nr of the questionmatch is 3.
-    # The m_nr before it, 2, have is_alternative set True. Continue until it
-    # checks all previous questions until it finds the most recent question = 1.
-    # Messages =
-    #  { "m_nr" : 1, "qtext" : "Hi", "rtext": "how are you?", "is_alternative" : False },
-    #  { "m_nr" : 2, "qtext" : "Good!", "rtext" : "Nice!", "is_alternative" : True },
-    #  { "m_nr" : 3, "qtext" : "Bad!", "rtext" : "Too bad", "is_alternative" : True}
-    #  { "m_nr" : 4, "qtext" : "You?", "rtext" : "Great!", "is_alternative" : False}
-    # This only goes if the questionmatch has is_alternative itself. For example,
-    # if the mostrecentquestion is 1, m_nr 4 will fail
-    def arePreviousMessagesAlternatives(this, m_nr, mostrecentquestion, m_nrs_isalternatives):
-        print 'm_nr:', m_nr, 'mrquestion:', mostrecentquestion, 'm_nrisalts:', m_nrs_isalternatives
-        # TODO Problem 1: you can go from 1 to 4 and skip all is_alternatives
-        previousMsgsAreAlternatives = False
-
-        if m_nr <= mostrecentquestion:
+        mostrecentquestion = self.getSendersMostRecentQuestionForConvId(messageSender, question['conv_id'])
+        if not mostrecentquestion:
             return False
 
-        currentMessage = m_nr-1
-        while currentMessage > mostrecentquestion:
-            try:
-                if m_nrs_isalternatives[currentMessage] == True:
-                    currentMessage -= 1
-                    previousMsgsAreAlternatives = True
-                    continue
-                else:
-                    print 'previous msg was not isalternative True, not a follow up:', currentMessage, ' - ', m_nrs_isalternatives[currentMessage-1]
+        indexMostRecentQuestion = sortedm_nrs.index(mostrecentquestion)
+        indexAskedQuestion = sortedm_nrs.index(question['m_nr'])
+
+        if indexMostRecentQuestion >= indexAskedQuestion:
+            return False
+
+        isDirectFollowUp = self.isDirectFollowUpQuestion(sortedm_nrs, mostrecentquestion, question['m_nr'])
+        if isDirectFollowUp:
+            isMostRecentQAlternative = m_nrs_isalternatives[mostrecentquestion] #self.isMostRecentQuestionAlternative(mostrecentquestion, question['conv_id'])
+            if isMostRecentQAlternative:
+                if question['is_alternative']:
                     return False
-            except Exception, e:
-                print 'probably indexerror in arePreviousMessagesAlternatives:', e
-        print 'all previous messages are is_alternative, its a follow up!', previousMsgsAreAlternatives
+                else:
+                    return True
+            else:
+                return True
+        else:
+            indexCheckQuestion = indexAskedQuestion - 1
+            # LOGIC can be refactored. While loop happens in both conditions,
+            # reduce to once then check condition?
+            if question['is_alternative']:
+                while indexMostRecentQuestion > indexCheckQuestion:
+                    if m_nrs_isalternatives[indexCheckQuestion]:
+                        indexCheckQuestion -= 1
+                        continue
+                    else:
+                        return False
+                if m_nrs_isalternatives[mostrecentquestion]:
+                    return False
+                else:
+                    return True
+            else:
+                while indexMostRecentQuestion > indexCheckQuestion:
+                    if m_nrs_isalternatives[indexCheckQuestion]:
+                        indexCheckQuestion -= 1
+                        continue
+                    else:
+                        return False
+                if m_nrs_isalternatives[mostrecentquestion]:
+                    return True
+                else:
+                    return False
 
-        return previousMsgsAreAlternatives
+
+    def getSendersMostRecentQuestionForConvId(self, messageSender, conv_id):
+        if self.isUserRegisteredInConversationState(messageSender):
+            mostrecentquestion = 0
+            for convstate in self.conversationstates[messageSender]:
+                if convstate['conv_id'] == conv_id:
+                    return convstate['mostrecentquestion']
+        else:
+            return False
 
 
-    # tests if at least one of the previous 'is_alternative' questions have
-    # been asked. if not, they were skipped and the example m_nr: 1 -> m_nr:4
-    # will return an unwarranted response
-    def hasAlternativeQuestionBeenAsked(this, m_nr, m_nrs_isalternatives):
-        print 'checking if alt questions have been asked'
-        return m_nrs_isalternatives[m_nr]
+    # For when mostrecentquestion = 2, and asked m_nr = 3.
+    # Will also work when m_nr 3 has been removed, mostrecentquestion = 2,
+    # and m_nr = 4
+    def isDirectFollowUpQuestion(self, sortedm_nrs, mostrecentquestion, m_nr):
+        try:
+            indexMostRecentQuestion = sortedm_nrs.index(mostrecentquestion)
+            indexAskedQuestion = sortedm_nrs.index(m_nr)
+            print 'direct follow up:', indexAskedQuestion == indexMostRecentQuestion + 1
+            return indexAskedQuestion == indexMostRecentQuestion + 1
+        except ValueError:
+            return False
 
 
     def getm_nrsAndis_alternativeForConvId(self, conv_id):
@@ -160,7 +180,7 @@ class ResponseBuilder:
         except Exception, e:
             print 'exception:', e
             return False
-        return False
+        return True
 
 
     # Logic of doom to check if a question requires a response
@@ -205,7 +225,8 @@ class ResponseBuilder:
 
     def resetSendersConversationState(self, messageSender):
         try:
-            self.conversationstates[messageSender] = []
+            del self.conversationstates[messageSender]
+            print 'conv state for user reset:', messageSender
         except Exception, e:
             logging.info('User did not have conversationstate to reset')
             return False
@@ -248,11 +269,11 @@ class ResponseBuilder:
 
         if message == self.resetmsg:
             self.reinitialize(messageSender)
+            return False
 
         message = self.replaceEscapedCharacters(message)
 
         questionmatches = self.findMessageQuestionMatches(message)
-        print '\nquestionmatches:\n', questionmatches
         if questionmatches:
             for question in questionmatches:
                 shouldGetResponseBool = self.shouldGetResponse(
