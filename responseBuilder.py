@@ -247,7 +247,7 @@ class ResponseBuilder:
       escapedMessage = self.escapeTextPattern(escapedMessage, '\\', '&#92;')
       escapedMessage = self.escapeTextPattern(escapedMessage, '/', '&#47;')
       escapedMessage = self.escapeTextPattern(escapedMessage, '[', '&#91;')
-      escapedMessage = self.escapeTextPattern(escapedString, ':', '&#58;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, ':', '&#58;')
       print '\n## the escaped msg:', escapedMessage
       return escapedMessage
 
