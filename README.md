@@ -1,6 +1,9 @@
 ## Facebook chatbot
 
-A simple flask powered Facebook API. Will require some fiddling to set up. Get uwsgi running and you'll have finished most of it
+A simple flask powered Facebook API. Will require some fiddling to set up. Get uwsgi running and you'll have finished most of it.
+
+The frontend to manage conversations can be found [Here](https://github.com/bastronaut/chatbotFrontend/). The API can be found [Here](https://github.com/bastronaut/chatbotAPI/).
+
 
 ## How to
 * Facebook requires you use https for their chatbot, so make sure your endpoints are behind https. Check for instance [Lets Encrypt](https://letsencrypt.org/) to setup a free certificate
