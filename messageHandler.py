@@ -4,13 +4,16 @@ import json
 import requests
 from database.db import Db
 from responseBuilder import ResponseBuilder
+# from multipleChoiceResponseBuilder import MultipleChoiceResponseBuilder
 from messageEntity import MessageEntity
 
+
+# mtlplchoicerb = MultipleChoiceResponseBuilder()
 
 
 class MessageHandler:
     db = Db()
-    responsebuilder = ResponseBuilder()
+    rb = ResponseBuilder()
 
     def buildResponseForRequest(self, payload):
 
@@ -25,9 +28,17 @@ class MessageHandler:
                 messageEntity = MessageEntity(messagesender, messagetext)
                 self.db.storeIncomingMsg(messagesender, messagetext, timestamp)
 
-                responses = self.responsebuilder.getResponsesForMessage(messageEntity)
+                ### temporary multiple choice test
+                if messagetext == 'multiplechoice!':
+                    return {'messagesender' : messagesender,
+                            'responsetext' : 'multiplechoice!',
+                            'timestamp': timestamp}
+
+                responses = self.rb.getResponsesForMessage(messageEntity)
                 if responses:
-                    return {'messagesender' : messagesender, 'responsetext' : responses[0]["responseText"], 'timestamp': timestamp}
+                    return {'messagesender' : messagesender,
+                            'responsetext' : responses[0]["responseText"],
+                            'timestamp': timestamp}
                 else:
                     return False
 
@@ -39,6 +50,43 @@ class MessageHandler:
         data=json.dumps({
             "recipient": {"id": response["messagesender"]},
             "message": {"text": response["responsetext"]}
+        }),
+        headers={'Content-type': 'application/json'})
+        if r.status_code != requests.codes.ok:
+            print 'request codes not ok:', r.text
+        else:
+            print 'response done, inserting outgoing msg into db'
+            self.db.storeOutgoingMsg(response["messagesender"], response["responsetext"], response["timestamp"])
+        return 'ok'
+
+
+    def testMultipleChoiceResponse(self, token):
+        print 'building test response'
+        r = requests.post("https://graph.facebook.com/v2.6/me/messages",
+        params={"access_token": token},
+        data=json.dumps({
+            "recipient": {"id": response["messagesender"]},
+            "message":{
+                "attachment":{
+                  "type":"template",
+                  "payload":{
+                    "template_type":"button",
+                    "text":"What do you want to do next?",
+                    "buttons":[
+                      {
+                        "type":"postback",
+                        "title" : "First postbak",
+                        "payload":"ANOTHER_PAYLOAD"
+                      },
+                      {
+                        "type":"postback",
+                        "title":"Start Chatting",
+                        "payload":"USER_DEFINED_PAYLOAD"
+                      }
+                    ]
+                  }
+                }
+              }
         }),
         headers={'Content-type': 'application/json'})
         if r.status_code != requests.codes.ok:

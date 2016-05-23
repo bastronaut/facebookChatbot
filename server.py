@@ -1,12 +1,10 @@
 from flask import Flask, request
 app = Flask(__name__)
 import json
-from responseBuilder import ResponseBuilder
 from messageEntity import MessageEntity
 from messageHandler import MessageHandler
 import credentials
 
-responsebuilder = ResponseBuilder()
 messageHandler = MessageHandler()
 VERIFYTOKEN = credentials.VERIFYTOKEN
 AUTHTOKEN = credentials.AUTHTOKEN
@@ -26,6 +24,11 @@ def webhook():
     payload = json.loads(request.get_data())
 
     response = messageHandler.buildResponseForRequest(payload)
+
+    ### temporary messy multiplechoice test
+    if response['responsetext'] == 'multiplechoice':
+        print 'testing multiple choice response...'
+        messageHandler.testMultipleChoiceResponse(AUTHTOKEN)
 
     if response:
         print 'sending response!'
