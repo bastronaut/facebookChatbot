@@ -28,12 +28,12 @@ def webhook():
     if response:
 
         ### temporary messy multiplechoice test
-        if response['responsetext'] == 'multiplechoice':
+        if response['responsetext'] == 'multiplechoice!':
             print 'testing multiple choice response...'
             messageHandler.testMultipleChoiceResponse(AUTHTOKEN)
 
         print 'sending response!'
-        messageHandler.sendResponse(response, AUTHTOKEN)
+        messageHandler.sendResponse(response, response, AUTHTOKEN)
     else:
         print 'no response was send.'
     return 'ok'
