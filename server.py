@@ -1,8 +1,8 @@
 from flask import Flask, request
 app = Flask(__name__)
 import json
-from messageEntity import MessageEntity
-from messageHandler import MessageHandler
+from facebookChatbot.chatbot.messageEntity import MessageEntity
+from facebookChatbot.chatbot.messageHandler import MessageHandler
 import credentials
 
 messageHandler = MessageHandler()
@@ -30,10 +30,10 @@ def webhook():
         ### temporary messy multiplechoice test
         if response['responsetext'] == 'multiplechoice!':
             print 'testing multiple choice response...'
-            messageHandler.testMultipleChoiceResponse(AUTHTOKEN)
+            messageHandler.testMultipleChoiceResponse(response, AUTHTOKEN)
 
         print 'sending response!'
-        messageHandler.sendResponse(response, response, AUTHTOKEN)
+        messageHandler.sendResponse(response, AUTHTOKEN)
     else:
         print 'no response was send.'
     return 'ok'

@@ -2,7 +2,7 @@ from flask import Flask, request
 app = Flask(__name__)
 import json
 import requests
-from database.db import Db
+from facebookChatbot.database.db import Db
 from responseBuilder import ResponseBuilder
 # from multipleChoiceResponseBuilder import MultipleChoiceResponseBuilder
 from messageEntity import MessageEntity
@@ -60,7 +60,7 @@ class MessageHandler:
         return 'ok'
 
 
-    def testMultipleChoiceResponse(self, token):
+    def testMultipleChoiceResponse(self, response, token):
         print 'building test response'
         r = requests.post("https://graph.facebook.com/v2.6/me/messages",
         params={"access_token": token},

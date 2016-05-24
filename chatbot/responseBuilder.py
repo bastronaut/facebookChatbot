@@ -1,5 +1,5 @@
-from database.sampledata                               import Sampledata
-from database.db                                       import Db
+from facebookChatbot.database.sampledata                               import Sampledata
+from facebookChatbot.database.db                                       import Db
 from datetime                                          import time, tzinfo, datetime, timedelta
 import datetime as dt
 import time
@@ -45,11 +45,8 @@ class ResponseBuilder:
         matches = []
         for message in self.messages:
             loweredmessage = message['qtext'].lower()
-            if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)):
-                # print '\n\nRE match, appending', loweredmessage, incomingmessage, re.search(r'\b' + loweredmessage + r'\b', incomingmessage)
-                matches.append(message)
-            elif loweredmessage == incomingmessage:
-                # print 'exact match, appending', message
+            if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)) or (loweredmessage == incomingmessage):
+                message['responseType'] = 'simple'
                 matches.append(message)
         return matches
 
@@ -67,7 +64,8 @@ class ResponseBuilder:
         return (messageSender in self.conversationstates)
 
 
-    # Logic from hell. Needs refactoring terribly!
+    # Logic from hell. Worth thinking about refactoring another data structure.
+    # Probably good idea to use a graph.
     # Because of is_alternative messages, checking whether a sent message is a
     # follow up of the previously sent msg can be tricky.
     # From a set of is_alternatives, only 1 of them should be said. Example
@@ -286,7 +284,8 @@ class ResponseBuilder:
                     response = question['rtext']
                     isConvStateUpdated = self.updateConversationState(messageSender, question)
                     print 'response: ', response, '\n conv state updated: ', isConvStateUpdated, '\n'
-                    returnResponses.append({'responseText' : response})
+                    returnResponses.append({'responseText' : response,
+                                            'responseType' : response['responseType']})
                 else:
                     print 'shud not get response'
         print returnResponses
