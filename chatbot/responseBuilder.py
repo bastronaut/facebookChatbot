@@ -285,7 +285,7 @@ class ResponseBuilder:
                     isConvStateUpdated = self.updateConversationState(messageSender, question)
                     print 'response: ', response, '\n conv state updated: ', isConvStateUpdated, '\n'
                     returnResponses.append({'responseText' : response,
-                                            'responseType' : response['responseType']})
+                                            'responseType' : question['responseType']})
                 else:
                     print 'shud not get response'
         print returnResponses

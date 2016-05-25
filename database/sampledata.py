@@ -11,8 +11,8 @@ class Sampledata:
     def getMessages(self):
         return self.messages
 
-    def getTestPOSTS(self):
-        return self.testPOSTs
+    def getTestJSONs(self):
+        return self.testJSONS
 
     convs = [
         { "conv_id" : 1, "conv_name" : "example chat"},
@@ -50,7 +50,7 @@ class Sampledata:
         ]
     }
 
-    testPOSTs = ['''{
+    testJSONS = ['''{
       "object":"page",
       "entry":[
         {
@@ -68,7 +68,7 @@ class Sampledata:
               "message":{
                 "mid":"mid.1460245671959:dad2ec9421b03d6f78",
                 "seq":216,
-                "text":"hello"
+                "text":"Hi"
               }
             }
           ]
@@ -93,7 +93,7 @@ class Sampledata:
               "message":{
                 "mid":"mid.1460245671959:dad2ec9421b03d6f78",
                 "seq":216,
-                "text":"goodbye!"
+                "text":"Good!"
               }
             }
           ]

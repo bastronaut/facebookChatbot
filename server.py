@@ -8,6 +8,7 @@ import credentials
 messageHandler = MessageHandler()
 VERIFYTOKEN = credentials.VERIFYTOKEN
 AUTHTOKEN = credentials.AUTHTOKEN
+testmode = True
 
 @app.route('/fbchatbot/', methods=['GET'])
 def verify():
@@ -26,14 +27,17 @@ def webhook():
     response = messageHandler.buildResponseForRequest(payload)
 
     if response:
+        if testmode:
+            print 'Mock sending response for:', response, '\n..returning..'
+            return 'ok'
 
         ### temporary messy multiplechoice test
         if response['responsetext'] == 'multiplechoice!':
-            print 'testing multiple choice response...'
             messageHandler.testMultipleChoiceResponse(response, AUTHTOKEN)
 
         print 'sending response!'
         messageHandler.sendResponse(response, AUTHTOKEN)
+
     else:
         print 'no response was send.'
     return 'ok'
