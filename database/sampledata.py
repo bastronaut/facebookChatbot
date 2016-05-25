@@ -11,6 +11,9 @@ class Sampledata:
     def getMessages(self):
         return self.messages
 
+    def getTestPOSTS(self):
+        return self.testPOSTs
+
     convs = [
         { "conv_id" : 1, "conv_name" : "example chat"},
         { "conv_id" : 2, "conv_name" : "second chat"},
@@ -46,3 +49,54 @@ class Sampledata:
             {'conv_id': 1, 'latestinteraction' : 2, 'mostrecentquestion': 3 },
         ]
     }
+
+    testPOSTs = ['''{
+      "object":"page",
+      "entry":[
+        {
+          "id":"PAGE_ID",
+          "time":1460245674269,
+          "messaging":[
+            {
+              "sender":{
+                "id":"12345"
+              },
+              "recipient":{
+                "id":"10"
+              },
+              "timestamp":1460245672080,
+              "message":{
+                "mid":"mid.1460245671959:dad2ec9421b03d6f78",
+                "seq":216,
+                "text":"hello"
+              }
+            }
+          ]
+        }
+      ]
+    }''',
+    '''{
+      "object":"page",
+      "entry":[
+        {
+          "id":"PAGE_ID",
+          "time":1460245674269,
+          "messaging":[
+            {
+              "sender":{
+                "id":"12345"
+              },
+              "recipient":{
+                "id":"10"
+              },
+              "timestamp":1460245672080,
+              "message":{
+                "mid":"mid.1460245671959:dad2ec9421b03d6f78",
+                "seq":216,
+                "text":"goodbye!"
+              }
+            }
+          ]
+        }
+      ]
+    }''']

@@ -1,5 +1,5 @@
-from facebookChatbot.database.sampledata                               import Sampledata
-from facebookChatbot.database.db                                       import Db
+from database.sampledata                               import Sampledata
+from database.db                                       import Db
 from datetime                                          import time, tzinfo, datetime, timedelta
 import datetime as dt
 import time

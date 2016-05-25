@@ -2,13 +2,9 @@ from flask import Flask, request
 app = Flask(__name__)
 import json
 import requests
-from facebookChatbot.database.db import Db
+from database.db import Db
 from responseBuilder import ResponseBuilder
-# from multipleChoiceResponseBuilder import MultipleChoiceResponseBuilder
 from messageEntity import MessageEntity
-
-
-# mtlplchoicerb = MultipleChoiceResponseBuilder()
 
 
 class MessageHandler:

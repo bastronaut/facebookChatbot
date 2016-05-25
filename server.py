@@ -1,8 +1,8 @@
 from flask import Flask, request
 app = Flask(__name__)
 import json
-from facebookChatbot.chatbot.messageEntity import MessageEntity
-from facebookChatbot.chatbot.messageHandler import MessageHandler
+import chatbot.messageEntity
+from chatbot.messageHandler import MessageHandler
 import credentials
 
 messageHandler = MessageHandler()
