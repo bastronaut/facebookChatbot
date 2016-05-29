@@ -13,8 +13,9 @@ tree graph t:
     b         c
     |       /   \
     d       e   f
-
-t = { a : (b, c), b : (d), c: (e, f), d: ()}
+                |
+                g
+t = { a : (b, c), b : (d), c: (e, f), d: set()}
 
 data struct:
 convs = {
@@ -36,9 +37,9 @@ check if there is a match only in the child nodes attached to their most recent
 message. If so, reply with the child response, and update mostrecentmessage
 
 Tree methods to implement:
-is_child(G, x, y): tests whether there is an edge from parent vrtx x to child y
-add_vertex(G, x): adds the vertex x, if it is not there;
-remove_vertex(G, x): removes the vertex x, if it is there;
+is_child(G, x, y): tests whether there is an edge from parent node x to child y
+add_node(G, x): adds the node x, if it is not there;
+remove_node(G, x): removes the node x, if it is there;
 add_edge(G, x, y): adds the edge from the vertices x to y, if it is not there;
 remove_edge(G, x, y): removes the edge from  vertices x to y, if it is there;
 
@@ -47,41 +48,66 @@ from sets import Set
 
 
 class ResponseBuilderGraph:
-    conversations = {}
-    sampleconversation = {
-        1 : { 'conv_name': 'conv one', 'tree': {
-            'a' : ('b', 'c'), 'b' : ('d'), 'c': ('e', 'f'),
-            'd': (), 'e': (), 'f': ()}},
-        2 : { 'conv_name': 'conv two', 'tree': {
-            'a' : ('b', 'c'), 'b' : ('d', 'e'), 'c': ('f'),
-            'd': (), 'e': (), 'f': ()}},
+    # conversations = {}
+    conversations = {
+        1: {'conv_name': 'conv one', 'tree': {
+            'a': {'b', 'c'}, 'b': {'d'}, 'c': {'e', 'f'},
+            'd': set(), 'e': set(), 'f': {'g'}, 'g': set()}},
+        2: {'conv_name': 'conv two', 'tree': {
+            'a': ('b', 'c'), 'b': ('d', 'e'), 'c': ('f'),
+            'd': set(), 'e': set(), 'f': set()}},
+        }
+
+    conversationsbak = {
+        1: {'conv_name': 'conv one', 'tree': {
+            'a': ('b', 'c'), 'b': ('d'), 'c': ('e', 'f'),
+            'd': set(), 'e': set(), 'f': ('g'), 'g': set()}},
+        2: {'conv_name': 'conv two', 'tree': {
+            'a': ('b', 'c'), 'b': ('d', 'e'), 'c': ('f'),
+            'd': set(), 'e': set(), 'f': set()}},
         }
 
     def __init__(self):
         pass
 
-    def is_child(self, conv_id, x, y):
-        return y in self.conversations[conv_id][x]
+    def is_child(self, conv_id, parent, child):
+        try:
+            return child in self.conversations[conv_id]['tree'][parent]
+        except Exception:
+            return False
 
-    def add_vertex(self, conv_id, x):
-        if x in self.conversations[conv_id]:
+    def add_node(self, conv_id, node_id):
+        if node_id in self.conversations[conv_id]['tree']:
             return
         else:
-            self.conversations[conv_id][x] = Set([])
+            self.conversations[conv_id]['tree'][node_id] = Set([])
 
-    def remove_vertex(self, conv_id, x):
-        if x in self.conversations[conv_id]:
-            del self.conversations[conv_id][x]
+    # will recursively delete a node and all its child components
+    def remove_node(self, conv_id, node):
+        if node in self.conversations[conv_id]['tree']:
+            if self.conversations[conv_id]['tree'][node]:
+                for childnode in self.conversations[conv_id]['tree'][node]:
+                    self.remove_node(conv_id, childnode)
+            del self.conversations[conv_id]['tree'][node]
+
+    def remove_edge(self, conv_id, edge):
+        for node in self.conversations[conv_id]['tree']:
+            if edge in self.conversations[conv_id]['tree'][node]:
+                self.conversations[conv_id]['tree'][node].remove(edge)
+                break
 
     def add_edge(self, x, y):
         return
 
+    def resetconvs(self):
+        print 'resetting convs..'
+        self.conversations = self.conversationsbak
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
-    print rbg.sampleconversation
-
-
-#
-#
-#
+    print '####################\nThe start is:\n', rbg.conversations[1]['tree']
+    print rbg.is_child(1, 'a', 'g')
+    rbg.remove_node(1, 'c')
+    rbg.remove_edge(1, 'c')
+    print '####################\nThe end is:\n', rbg.conversations[1]['tree']
+    rbg.resetconvs()
