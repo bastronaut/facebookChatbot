@@ -51,19 +51,10 @@ class ResponseBuilderGraph:
     # conversations = {}
     conversations = {
         1: {'conv_name': 'conv one', 'tree': {
-            'a': {'b', 'c'}, 'b': {'d'}, 'c': {'e', 'f'},
-            'd': set(), 'e': set(), 'f': {'g'}, 'g': set()}},
+            'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
+            'd': set(), 'e': set(), 'f': set('g'), 'g': set()}},
         2: {'conv_name': 'conv two', 'tree': {
-            'a': ('b', 'c'), 'b': ('d', 'e'), 'c': ('f'),
-            'd': set(), 'e': set(), 'f': set()}},
-        }
-
-    conversationsbak = {
-        1: {'conv_name': 'conv one', 'tree': {
-            'a': ('b', 'c'), 'b': ('d'), 'c': ('e', 'f'),
-            'd': set(), 'e': set(), 'f': ('g'), 'g': set()}},
-        2: {'conv_name': 'conv two', 'tree': {
-            'a': ('b', 'c'), 'b': ('d', 'e'), 'c': ('f'),
+            'a': set(['b', 'c']), 'b': set(['d', 'e']), 'c': set('f'),
             'd': set(), 'e': set(), 'f': set()}},
         }
 
@@ -78,6 +69,7 @@ class ResponseBuilderGraph:
 
     def add_node(self, conv_id, node_id):
         if node_id in self.conversations[conv_id]['tree']:
+            # print self.conversations[conv_id]['tree'][node_id]
             return
         else:
             self.conversations[conv_id]['tree'][node_id] = Set([])
@@ -100,14 +92,24 @@ class ResponseBuilderGraph:
         return
 
     def resetconvs(self):
+        conversationsbackup = {
+            1: {'conv_name': 'conv one', 'tree': {
+                'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
+                'd': set(), 'e': set(), 'f': set('g'), 'g': set()}},
+            2: {'conv_name': 'conv two', 'tree': {
+                'a': set(['b', 'c']), 'b': set(['d', 'e']), 'c': set('f'),
+                'd': set(), 'e': set(), 'f': set()}},
+            }
         print 'resetting convs..'
-        self.conversations = self.conversationsbak
+        self.conversations = conversationsbackup
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
     print '####################\nThe start is:\n', rbg.conversations[1]['tree']
     print rbg.is_child(1, 'a', 'g')
     rbg.remove_node(1, 'c')
-    rbg.remove_edge(1, 'c')
+    # rbg.remove_edge(1, 'c')
     print '####################\nThe end is:\n', rbg.conversations[1]['tree']
-    rbg.resetconvs()
+    rbg.remove_node(1, 'b')
+    print '####################\nThe end is:\n', rbg.conversations[1]['tree']
+    # rbg.resetconvs()
