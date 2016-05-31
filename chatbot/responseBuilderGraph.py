@@ -103,13 +103,18 @@ class ResponseBuilderGraph:
         print 'resetting convs..'
         self.conversations = conversationsbackup
 
+    def setconversations(self, conversations):
+        print 'setting conversations to:\n', conversations[1]['tree']
+        self.conversations = conversations
+
+
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
     print '####################\nThe start is:\n', rbg.conversations[1]['tree']
-    print rbg.is_child(1, 'a', 'g')
-    rbg.remove_node(1, 'c')
-    # rbg.remove_edge(1, 'c')
+    # print rbg.is_child(1, 'a', 'g')
+    # rbg.remove_node(1, 'c')
+    rbg.remove_edge(1, 'b')
     print '####################\nThe end is:\n', rbg.conversations[1]['tree']
-    rbg.remove_node(1, 'b')
-    print '####################\nThe end is:\n', rbg.conversations[1]['tree']
+    # rbg.remove_node(1, 'b')
+    # print '####################\nThe end is:\n', rbg.conversations[1]['tree']
     # rbg.resetconvs()
