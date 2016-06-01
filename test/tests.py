@@ -27,19 +27,20 @@ class TestCase(unittest.TestCase):
 
 class TestResponseBuilderGraph(unittest.TestCase):
 
-    sampleconversations = {
-        1: {'conv_name': 'conv one', 'tree': {
-            'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
-            'd': set(), 'e': set(), 'f': set('g'), 'g': set()}},
-        2: {'conv_name': 'conv two', 'tree': {
-            'a': set(['c', 'b']), 'b': set(['d', 'e']), 'c': set('f'),
-            'd': set(), 'e': set(), 'f': set()}},
-        3: {'conv_name': 'conv two', 'tree': {
-            'a': set(['c', 'b']), 'b': set([]), 'c': set([])}}
-        }
+    sampleconversations = {}
 
     def setUp(self):
-        print '\n\nrunning setup\n\n#' 
+        sampleconversations = {
+            1: {'conv_name': 'conv one', 'tree': {
+                'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
+                'd': set(), 'e': set(), 'f': set('g'), 'g': set()}},
+            2: {'conv_name': 'conv two', 'tree': {
+                'a': set(['c', 'b']), 'b': set(['d', 'e']), 'c': set('f'),
+                'd': set(), 'e': set(), 'f': set()}},
+            3: {'conv_name': 'conv two', 'tree': {
+                'a': set(['c', 'b']), 'b': set([]), 'c': set([])}}
+            }
+        self.sampleconversations = sampleconversations
         self.rbg = ResponseBuilderGraph()
         self.rbg.setconversations(self.sampleconversations)
 
@@ -59,8 +60,8 @@ class TestResponseBuilderGraph(unittest.TestCase):
                         set(['c', 'b']))
 
     def test_remove_node(self):
-        self.rbg.remove_node(1, 'c')
         remove_result = {'a': set(['c', 'b']), 'b': set(['d']), 'd': set([])}
+        self.rbg.remove_node(1, 'c')
         self.assertEqual(self.rbg.conversations[1]['tree'], remove_result)
 
         self.rbg.remove_node(1, 'b')
@@ -68,17 +69,23 @@ class TestResponseBuilderGraph(unittest.TestCase):
         self.assertEqual(self.rbg.conversations[1]['tree'], remove_result)
 
     def test_remove_edge(self):
-        print 'before:##############\n\n', self.rbg.conversations[1]['tree']
-        self.rbg.remove_edge(1, 'b')
-        print 'after:##############\n\n', self.rbg.conversations[1]['tree']
         remove_edge_result = {'a': set(['c']), 'c': set(['e', 'f']),
                               'b': set(['d']), 'e': set([]), 'd': set([]),
                               'g': set([]), 'f': set(['g'])}
-        print '\n', remove_edge_result
+        self.rbg.remove_edge(1, 'b')
         self.assertEqual(self.rbg.conversations[1]['tree'], remove_edge_result)
-        # self.rbg.remove_edge(1, 'DOESNT EXIST')
-        # self.assertEqual(self.rbg.conversations[1]['tree'], remove_edge_result)
 
+        self.rbg.remove_edge(1, 'DOESNT EXIST')  # result should not change
+        self.assertEqual(self.rbg.conversations[1]['tree'], remove_edge_result)
+
+    def test_add_edge(self):
+        add_edge_result = {'a': set(['c', 'b', 'z']), 'b': set([]),
+                           'c': set([])}
+        self.rbg.add_edge(3, 'a', 'z')
+        self.assertEqual(self.rbg.conversations[3]['tree'], add_edge_result)
+
+        self.rbg.add_edge(3, 'a', 'c')  # already exists, result should not change
+        self.assertEqual(self.rbg.conversations[3]['tree'], add_edge_result)
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)

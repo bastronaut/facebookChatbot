@@ -69,7 +69,6 @@ class ResponseBuilderGraph:
 
     def add_node(self, conv_id, node_id):
         if node_id in self.conversations[conv_id]['tree']:
-            # print self.conversations[conv_id]['tree'][node_id]
             return
         else:
             self.conversations[conv_id]['tree'][node_id] = Set([])
@@ -88,8 +87,11 @@ class ResponseBuilderGraph:
                 self.conversations[conv_id]['tree'][node].remove(edge)
                 break
 
-    def add_edge(self, x, y):
-        return
+    def add_edge(self, conv_id, node, edge):
+        if edge in self.conversations[conv_id]['tree'][node]:
+            return
+        else:
+            self.conversations[conv_id]['tree'][node].add(edge)
 
     def resetconvs(self):
         conversationsbackup = {
@@ -104,7 +106,6 @@ class ResponseBuilderGraph:
         self.conversations = conversationsbackup
 
     def setconversations(self, conversations):
-        print 'setting conversations to:\n', conversations[1]['tree']
         self.conversations = conversations
 
 
