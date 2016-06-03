@@ -32,7 +32,7 @@ convs = [
         ]
 
 Now, instead of checking in all of the messages whether there is a match,
-we simply traverse the tree from their most recent message in each conversation,
+we simply traverse the tree from their mostrecent message in each conversation,
 check if there is a match only in the child nodes attached to their most recent
 message. If so, reply with the child response, and update mostrecentmessage
 
@@ -108,14 +108,30 @@ class ResponseBuilderGraph:
     def setconversations(self, conversations):
         self.conversations = conversations
 
+    def getmatches(self, message):
+        return
+
+    def getfirstmessageids(self):
+        for conversation in self.conversations:
+            return  # TODO
+
+    def getresponseformessages(self, message):
+        # find which message ids warrant a response
+        #   all the first message ids in a tree
+        #   the edges connected to the node of their most recent messages
+        # check whether one of these messages matches the incoming message
+        # if so, return the response
+        return
+
+# TODO:
+# the python script will not be responsible for inserting and maintaining
+# the tree. the nodejs script will be inserting and updating the treeself.
+# therefore, we have to add it to the node api. we have to store it in such a way
+# that it can easily be parsed and serialized into a tree
+# possible options: https://docs.mongodb.com/manual/applications/data-models-tree-structures/
+# probably the child reference model:
+# https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-child-references/
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
     print '####################\nThe start is:\n', rbg.conversations[1]['tree']
-    # print rbg.is_child(1, 'a', 'g')
-    # rbg.remove_node(1, 'c')
-    rbg.remove_edge(1, 'b')
-    print '####################\nThe end is:\n', rbg.conversations[1]['tree']
-    # rbg.remove_node(1, 'b')
-    # print '####################\nThe end is:\n', rbg.conversations[1]['tree']
-    # rbg.resetconvs()
