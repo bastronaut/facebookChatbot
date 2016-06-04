@@ -31,6 +31,25 @@ convs = [
         ...
         ]
 
+maybe make a node class. Class will be the following:
+
+class Node:
+    self.key = ''
+    self.children = []
+    self.parent = node, maybe not necessary? can only store children?
+
+    def __init__(self, key, children, parent):
+        self.key = key
+        self.children = children
+        self.parent = parent
+
+how to find the root node with this? problem with not storing the
+order of nodes? if they are not stored in order this will be a pain.
+only if parent is maintained, and it references 'root'  or something
+similar?
+
+tree = node(a, [node(b, [node(d, null, b)], 1), node(c, [], 1)], 0)..
+
 Now, instead of checking in all of the messages whether there is a match,
 we simply traverse the tree from their mostrecent message in each conversation,
 check if there is a match only in the child nodes attached to their most recent
