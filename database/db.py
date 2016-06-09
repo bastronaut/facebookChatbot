@@ -49,7 +49,7 @@ class Db:
     def insertTestData(self):
         testmessages = self.sampledata.getMessages()
         testconvs = self.sampledata.getConversations()
-        graphmsg = self.sampledata.getgraphmessages
+        graphmsg = self.sampledata.getgraphmessages()
         print 'inserting...'
         self.db.messages.insert(testmessages)
         self.db.conversations.insert(testconvs)

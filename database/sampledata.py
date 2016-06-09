@@ -1,12 +1,21 @@
 #!/usr/bin/python
 '''
-        1
+Graphs:
+1:
+        123
      /      \
-    2         4
+    124      126
     |       /   \
-    3       5   6
+    125    127   128
                 |
-                7
+                129
+
+2:
+        130
+     /      \
+    131      132
+    /   \      |
+   133   134   135
 
 '''
 
@@ -46,14 +55,21 @@ class Sampledata:
     ]
 
     graphmessages = [
-        {"m_nr": 1, "qtext": "Hi", "rtext": "Hi! :) How are you?",  "conv_id": 1, "key": 123, "parent": 0, "children": set([124, 126])},
-        {"m_nr": 2, "qtext": "Good!", "rtext": "That's great to hear!", "conv_id": 1, "key": 124, "parent": 123, "children": set([125])},
-        {"m_nr": 3, "qtext": "Thanks!", "rtext": "No Problem!", "conv_id": 1, "key": 125, "parent": 124, "children": set([])},
-        {"m_nr": 4, "qtext": "Not great...", "rtext": "How come?", "conv_id": 1, "key": 126, "parent": 123, "children": set([127, 128])},
-        {"m_nr": 5, "qtext": "Feeling sick", "rtext": "Aww. Get well soon!", "conv_id": 1, "key": 127, "parent": 126, "children": set([])},
-        {"m_nr": 6, "qtext": "Feeling tired", "rtext": "Aww. Get some sleep!", "conv_id": 1, "key": 128, "parent": 126, "children": set([129])},
-        {"m_nr": 7, "qtext": "I will!", "rtext": "Good night!", "conv_id": 1, "key": 129, "parent": 0, "children": set([])},
+        {"m_nr": 1, "qtext": "Hi", "rtext": "Hi! :) How are you?",  "conv_id": 1, "key": 123, "parent": 0, "children": [124, 126]},
+        {"m_nr": 2, "qtext": "Good!", "rtext": "That's great to hear!", "conv_id": 1, "key": 124, "parent": 123, "children": [125]},
+        {"m_nr": 3, "qtext": "Thanks!", "rtext": "No Problem!", "conv_id": 1, "key": 125, "parent": 124, "children": []},
+        {"m_nr": 4, "qtext": "Not great...", "rtext": "How come?", "conv_id": 1, "key": 126, "parent": 123, "children": [127, 128]},
+        {"m_nr": 5, "qtext": "Feeling sick", "rtext": "Aww. Get well soon!", "conv_id": 1, "key": 127, "parent": 126, "children": []},
+        {"m_nr": 6, "qtext": "Feeling tired", "rtext": "Aww. Get some sleep!", "conv_id": 1, "key": 128, "parent": 126, "children": [129]},
+        {"m_nr": 7, "qtext": "I will!", "rtext": "Good night!", "conv_id": 1, "key": 129, "parent": 0, "children": []},
+        {"m_nr": 8, "qtext": "130", "rtext": "130", "conv_id": 2, "key": 130, "parent": 0, "children": [131, 132]},
+        {"m_nr": 9, "qtext": "131", "rtext": "131", "conv_id": 2, "key": 131, "parent": 130, "children": [133, 134]},
+        {"m_nr": 10, "qtext": "132", "rtext": "132", "conv_id": 2, "key": 132, "parent": 130, "children": [135]},
+        {"m_nr": 11, "qtext": "133", "rtext": "133", "conv_id": 2, "key": 133, "parent": 131, "children": []},
+        {"m_nr": 12, "qtext": "134", "rtext": "134", "conv_id": 2, "key": 134, "parent": 131, "children": []},
+        {"m_nr": 12, "qtext": "135", "rtext": "135", "conv_id": 2, "key": 135, "parent": 132, "children": []}
     ]
+
     testconversationstate = {
         123: [
             {'conv_id': 1, 'latestinteraction': 10, 'mostrecentquestion': 2.2},

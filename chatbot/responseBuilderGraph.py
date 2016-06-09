@@ -64,53 +64,55 @@ remove_edge(G, x, y): removes the edge from  vertices x to y, if it is there;
 
 '''
 from sets import Set
+from database.sampledata import Sampledata
 
 
 class ResponseBuilderGraph:
-    # conversations = {}
-    conversations = {
-        1: {'conv_name': 'conv one', 'tree': {
-            'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
-            'd': set(), 'e': set(), 'f': set('g'), 'g': set()}},
-        2: {'conv_name': 'conv two', 'tree': {
-            'a': set(['b', 'c']), 'b': set(['d', 'e']), 'c': set('f'),
-            'd': set(), 'e': set(), 'f': set()}},
-        }
 
     def __init__(self):
-        pass
+        self.sd = Sampledata()
+        self.messages = self.sd.getgraphmessages()
+        self.conversations = self.buildconversationtree(self.messages)
+
+    def buildconversationtree(self, messages):
+        conversationtree = {}
+
+        for message in messages:
+            conversationtree.setdefault(message['conv_id'], {})
+            conversationtree[message['conv_id']][message['key']] = set(message['children'])
+        return conversationtree
 
     def is_child(self, conv_id, parent, child):
         try:
-            return child in self.conversations[conv_id]['tree'][parent]
+            return child in self.conversations[conv_id][parent]
         except Exception:
             return False
 
     def add_node(self, conv_id, node_id):
-        if node_id in self.conversations[conv_id]['tree']:
+        if node_id in self.conversations[conv_id]:
             return
         else:
-            self.conversations[conv_id]['tree'][node_id] = Set([])
+            self.conversations[conv_id][node_id] = Set([])
 
     # will recursively delete a node and all its child components
     def remove_node(self, conv_id, node):
-        if node in self.conversations[conv_id]['tree']:
-            if self.conversations[conv_id]['tree'][node]:
-                for childnode in self.conversations[conv_id]['tree'][node]:
+        if node in self.conversations[conv_id]:
+            if self.conversations[conv_id][node]:
+                for childnode in self.conversations[conv_id][node]:
                     self.remove_node(conv_id, childnode)
-            del self.conversations[conv_id]['tree'][node]
+            del self.conversations[conv_id][node]
 
     def remove_edge(self, conv_id, edge):
-        for node in self.conversations[conv_id]['tree']:
-            if edge in self.conversations[conv_id]['tree'][node]:
-                self.conversations[conv_id]['tree'][node].remove(edge)
+        for node in self.conversations[conv_id]:
+            if edge in self.conversations[conv_id][node]:
+                self.conversations[conv_id][node].remove(edge)
                 break
 
     def add_edge(self, conv_id, node, edge):
-        if edge in self.conversations[conv_id]['tree'][node]:
+        if edge in self.conversations[conv_id][node]:
             return
         else:
-            self.conversations[conv_id]['tree'][node].add(edge)
+            self.conversations[conv_id][node].add(edge)
 
     def resetconvs(self):
         conversationsbackup = {
@@ -153,4 +155,6 @@ class ResponseBuilderGraph:
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
-    print '####################\nThe start is:\n', rbg.conversations[1]['tree']
+    rbg.buildconversationtree(rbg.messages)
+
+    print '####################\nThe start is:\n', rbg.conversations[1]
