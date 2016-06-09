@@ -30,16 +30,17 @@ class TestResponseBuilderGraph(unittest.TestCase):
     sampleconversations = {}
 
     def setUp(self):
-        sampleconversations = {
+        self.sampleconversations = {
             1: {'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
                 'd': set(), 'e': set(), 'f': set('g'), 'g': set()},
             2: {'a': set(['c', 'b']), 'b': set(['d', 'e']), 'c': set('f'),
                 'd': set(), 'e': set(), 'f': set()},
             3: {'a': set(['c', 'b']), 'b': set([]), 'c': set([])}
             }
-        self.sampleconversations = sampleconversations
         self.rbg = ResponseBuilderGraph()
         self.rbg.setconversations(self.sampleconversations)
+        self.sd = Sampledata()
+        self.messages = self.sd.getgraphmessages()
 
     def test_is_child(self):
         self.assertTrue(self.rbg.is_child(1, 'c', 'f'))
@@ -83,6 +84,10 @@ class TestResponseBuilderGraph(unittest.TestCase):
 
         self.rbg.add_edge(3, 'a', 'c')  # already exists, result should not change
         self.assertEqual(self.rbg.conversations[3], add_edge_result)
+
+    def test_getrootnodes(self):
+        rootnodes = {1: 123, 2: 130}
+        self.assertEqual(self.rbg.getrootnodes(self.messages), rootnodes)
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)

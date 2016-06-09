@@ -61,7 +61,7 @@ class Sampledata:
         {"m_nr": 4, "qtext": "Not great...", "rtext": "How come?", "conv_id": 1, "key": 126, "parent": 123, "children": [127, 128]},
         {"m_nr": 5, "qtext": "Feeling sick", "rtext": "Aww. Get well soon!", "conv_id": 1, "key": 127, "parent": 126, "children": []},
         {"m_nr": 6, "qtext": "Feeling tired", "rtext": "Aww. Get some sleep!", "conv_id": 1, "key": 128, "parent": 126, "children": [129]},
-        {"m_nr": 7, "qtext": "I will!", "rtext": "Good night!", "conv_id": 1, "key": 129, "parent": 0, "children": []},
+        {"m_nr": 7, "qtext": "I will!", "rtext": "Good night!", "conv_id": 1, "key": 129, "parent": 128, "children": []},
         {"m_nr": 8, "qtext": "130", "rtext": "130", "conv_id": 2, "key": 130, "parent": 0, "children": [131, 132]},
         {"m_nr": 9, "qtext": "131", "rtext": "131", "conv_id": 2, "key": 131, "parent": 130, "children": [133, 134]},
         {"m_nr": 10, "qtext": "132", "rtext": "132", "conv_id": 2, "key": 132, "parent": 130, "children": [135]},

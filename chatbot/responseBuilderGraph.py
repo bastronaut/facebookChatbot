@@ -73,6 +73,7 @@ class ResponseBuilderGraph:
         self.sd = Sampledata()
         self.messages = self.sd.getgraphmessages()
         self.conversations = self.buildconversationtree(self.messages)
+        self.rootnotes = self.getrootnodes(self.messages)
 
     def buildconversationtree(self, messages):
         conversationtree = {}
@@ -132,9 +133,12 @@ class ResponseBuilderGraph:
     def getmatches(self, message):
         return
 
-    def getfirstmessageids(self):
-        for conversation in self.conversations:
-            return  # TODO
+    def getrootnodes(self, messages):
+        rootnodes = {}
+        for message in messages:
+            if message['parent'] == 0:
+                rootnodes[message['conv_id']] = message['key']
+        return rootnodes
 
     def getresponseformessages(self, message):
         # find which message ids warrant a response
