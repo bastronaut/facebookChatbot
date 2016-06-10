@@ -52,43 +52,57 @@ class TestResponseBuilderGraph(unittest.TestCase):
 
     def test_add_node(self):
         self.rbg.add_node(1, 'x')
-        self.assertTrue(type(self.rbg.conversations[1]['x']) == Set)
+        self.assertTrue(type(self.rbg.conversationtrees[1]['x']) == Set)
         self.rbg.add_node(1, 'a')
-        self.assertTrue(self.rbg.conversations[1]['a'] ==
+        self.assertTrue(self.rbg.conversationtrees[1]['a'] ==
                         set(['c', 'b']))
 
     def test_remove_node(self):
         remove_result = {'a': set(['c', 'b']), 'b': set(['d']), 'd': set([])}
         self.rbg.remove_node(1, 'c')
-        self.assertEqual(self.rbg.conversations[1], remove_result)
+        self.assertEqual(self.rbg.conversationtrees[1], remove_result)
 
         self.rbg.remove_node(1, 'b')
         remove_result = {'a': set(['c', 'b'])}
-        self.assertEqual(self.rbg.conversations[1], remove_result)
+        self.assertEqual(self.rbg.conversationtrees[1], remove_result)
 
     def test_remove_edge(self):
         remove_edge_result = {'a': set(['c']), 'c': set(['e', 'f']),
                               'b': set(['d']), 'e': set([]), 'd': set([]),
                               'g': set([]), 'f': set(['g'])}
         self.rbg.remove_edge(1, 'b')
-        self.assertEqual(self.rbg.conversations[1], remove_edge_result)
+        self.assertEqual(self.rbg.conversationtrees[1], remove_edge_result)
 
         self.rbg.remove_edge(1, 'DOESNT EXIST')  # result should not change
-        self.assertEqual(self.rbg.conversations[1], remove_edge_result)
+        self.assertEqual(self.rbg.conversationtrees[1], remove_edge_result)
 
     def test_add_edge(self):
         add_edge_result = {'a': set(['c', 'b', 'z']), 'b': set([]),
                            'c': set([])}
         self.rbg.add_edge(3, 'a', 'z')
-        self.assertEqual(self.rbg.conversations[3], add_edge_result)
+        self.assertEqual(self.rbg.conversationtrees[3], add_edge_result)
 
         self.rbg.add_edge(3, 'a', 'c')  # already exists, result should not change
-        self.assertEqual(self.rbg.conversations[3], add_edge_result)
+        self.assertEqual(self.rbg.conversationtrees[3], add_edge_result)
+
+    def test_buildconversationtrees(self):
+        convtreesresult = { 1:
+            {123: set([124, 126]), 124: set([125]), 125: set([]),
+             126: set([127, 128]), 127: set([]), 128: set([129]), 129: set([])},
+            2:
+            {130: set([131, 132]), 131: set([133, 134]), 132: set([135]),
+             133: set([]), 134: set([]), 135: set([])}}
+        self.assertEqual(self.rbg.buildconversationtrees(self.messages), convtreesresult)
 
     def test_getrootnodes(self):
         rootnodes = {1: 123, 2: 130}
         self.assertEqual(self.rbg.getrootnodes(self.messages), rootnodes)
 
+    def test_getchildnodes(self):
+        self.assertEqual(self.rbg.getchildnodes(1, 123), [124, 126])
+        self.assertEqual(self.rbg.getchildnodres(1, 999), [])
+        self.assertEqual(self.rbg.getchildnodres(2, 132), [135])
+        self.assertEqual(self.rbg.getchildnodres(999, 1), [])
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)
 unittest.TextTestRunner(verbosity=2).run(suite)

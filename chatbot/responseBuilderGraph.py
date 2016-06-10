@@ -72,48 +72,48 @@ class ResponseBuilderGraph:
     def __init__(self):
         self.sd = Sampledata()
         self.messages = self.sd.getgraphmessages()
-        self.conversations = self.buildconversationtree(self.messages)
+        self.conversationtrees = self.buildconversationtrees(self.messages)
         self.rootnotes = self.getrootnodes(self.messages)
 
-    def buildconversationtree(self, messages):
-        conversationtree = {}
+    def buildconversationtrees(self, messages):
+        conversationtrees = {}
 
         for message in messages:
-            conversationtree.setdefault(message['conv_id'], {})
-            conversationtree[message['conv_id']][message['key']] = set(message['children'])
-        return conversationtree
+            conversationtrees.setdefault(message['conv_id'], {})
+            conversationtrees[message['conv_id']][message['key']] = set(message['children'])
+        return conversationtrees
 
     def is_child(self, conv_id, parent, child):
         try:
-            return child in self.conversations[conv_id][parent]
+            return child in self.conversationtrees[conv_id][parent]
         except Exception:
             return False
 
     def add_node(self, conv_id, node_id):
-        if node_id in self.conversations[conv_id]:
+        if node_id in self.conversationtrees[conv_id]:
             return
         else:
-            self.conversations[conv_id][node_id] = Set([])
+            self.conversationtrees[conv_id][node_id] = Set([])
 
     # will recursively delete a node and all its child components
     def remove_node(self, conv_id, node):
-        if node in self.conversations[conv_id]:
-            if self.conversations[conv_id][node]:
-                for childnode in self.conversations[conv_id][node]:
+        if node in self.conversationtrees[conv_id]:
+            if self.conversationtrees[conv_id][node]:
+                for childnode in self.conversationtrees[conv_id][node]:
                     self.remove_node(conv_id, childnode)
-            del self.conversations[conv_id][node]
+            del self.conversationtrees[conv_id][node]
 
     def remove_edge(self, conv_id, edge):
-        for node in self.conversations[conv_id]:
-            if edge in self.conversations[conv_id][node]:
-                self.conversations[conv_id][node].remove(edge)
+        for node in self.conversationtrees[conv_id]:
+            if edge in self.conversationtrees[conv_id][node]:
+                self.conversationtrees[conv_id][node].remove(edge)
                 break
 
     def add_edge(self, conv_id, node, edge):
-        if edge in self.conversations[conv_id][node]:
+        if edge in self.conversationtrees[conv_id][node]:
             return
         else:
-            self.conversations[conv_id][node].add(edge)
+            self.conversationtrees[conv_id][node].add(edge)
 
     def resetconvs(self):
         conversationsbackup = {
@@ -125,10 +125,10 @@ class ResponseBuilderGraph:
                 'd': set(), 'e': set(), 'f': set()}},
             }
         print 'resetting convs..'
-        self.conversations = conversationsbackup
+        self.conversationtrees = conversationsbackup
 
     def setconversations(self, conversations):
-        self.conversations = conversations
+        self.conversationtrees = conversations
 
     def getmatches(self, message):
         return
@@ -139,6 +139,18 @@ class ResponseBuilderGraph:
             if message['parent'] == 0:
                 rootnodes[message['conv_id']] = message['key']
         return rootnodes
+
+    def getfollowupnodes(self, convstate):
+        followupnodes = []
+        mostrecentquestions = []
+        for conv_id in convstate:
+            mostrecentquestions.append(convstate[conv_id]['mostrecentquestion'])
+
+    def getchildnodes(self, conv_id, node):
+        childnodes = []
+        if conv_id in self.conversationtrees:
+            self.conversationtrees[conv_id]
+
 
     def getresponseformessages(self, message):
         # find which message ids warrant a response
@@ -159,6 +171,6 @@ class ResponseBuilderGraph:
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
-    rbg.buildconversationtree(rbg.messages)
+    rbg.buildconversationtrees(rbg.messages)
 
     print '####################\nThe start is:\n', rbg.conversations[1]

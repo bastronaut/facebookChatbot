@@ -34,6 +34,22 @@ class ResponseBuilder:
     #         {conv_id : x, mostrecentinteraction: timestamp, mostrecentquestion: question_nr}]
     # }
     #
+    
+    # new conversationstates = {
+    #     m.getFrom() : {
+    #         conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr},
+    #         conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr},
+    #         conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr}},
+    #     m.getFrom() : {
+    #         conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr},
+    #         conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr}
+    #         }
+    # }
+
+
+
+
+
     # messages: [
     #   { "m_nr" : 1, "qtext" : "hoi1", "rtext" : "doei 1", "is_alternative" : False, "conv_id" : 1, "key" : 123 },
     #        ..]
