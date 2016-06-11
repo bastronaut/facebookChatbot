@@ -37,6 +37,9 @@ class Sampledata:
     def getTestJSONs(self):
         return self.testJSONS
 
+    def getsampleconversationstates(self):
+        return self.sampleconversationstates
+
     convs = [
         {"conv_id": 1, "conv_name": "example chat"},
         {"conv_id": 2, "conv_name": "second chat"},
@@ -85,6 +88,26 @@ class Sampledata:
             {'conv_id': 4, 'latestinteraction': 30, 'mostrecentquestion': 1},
             {'conv_id': 1, 'latestinteraction': 2, 'mostrecentquestion': 3},
         ]
+    }
+
+    sampleconversationtrees = {
+        1: {123: set([124, 126]), 124: set([125]), 125: set([]),
+            126: set([127, 128]), 127: set([]), 128: set([129]), 129: set([])},
+        2: {130: set([131, 132]), 131: set([133, 134]), 132: set([135]),
+            133: set([]), 134: set([]), 135: set([])}}
+
+    sampleconversationstates = {
+        'bob': {
+            1 : { 'mostrecentinteraction': 'timestamp', 'mostrecentquestion': 124},
+            2 : { 'mostrecentinteraction': 'timestamp', 'mostrecentquestion': 131}
+            },
+        'hank': {
+            1 : { 'mostrecentinteraction': 'timestamp', 'mostrecentquestion': 129},
+            2 : { 'mostrecentinteraction': 'timestamp', 'mostrecentquestion': 999}
+            },
+        'ann': {
+            999 : { 'mostrecentinteraction': 'timestamp', 'mostrecentquestion': 1}
+            }
     }
 
     testJSONS = ['''{

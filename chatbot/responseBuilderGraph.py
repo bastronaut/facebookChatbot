@@ -78,7 +78,7 @@ class ResponseBuilderGraph:
                         self.remove_node(conv_id, childnode)
                 del self.conversationtrees[conv_id][node]
 
-    # should be called whenever a node is removed. Otherwise, edges 
+    # should be called whenever a node is removed. Otherwise, edges
     def remove_edge(self, conv_id, edge):
         for node in self.conversationtrees[conv_id]:
             if edge in self.conversationtrees[conv_id][node]:
@@ -90,18 +90,6 @@ class ResponseBuilderGraph:
             return
         else:
             self.conversationtrees[conv_id][node].add(edge)
-
-    def resetconvs(self):
-        conversationsbackup = {
-            1: {'conv_name': 'conv one', 'tree': {
-                'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
-                'd': set(), 'e': set(), 'f': set('g'), 'g': set()}},
-            2: {'conv_name': 'conv two', 'tree': {
-                'a': set(['b', 'c']), 'b': set(['d', 'e']), 'c': set('f'),
-                'd': set(), 'e': set(), 'f': set()}},
-            }
-        print 'resetting convs..'
-        self.conversationtrees = conversationsbackup
 
     def setconversations(self, conversations):
         self.conversationtrees = conversations
@@ -117,17 +105,13 @@ class ResponseBuilderGraph:
         return rootnodes
 
     # The child nodes of the most recently asked question of a user are the
-    # messages that are eligible for a reply. Fn returns:
+    # messages that are eligible for a reply. Function returns:
     # { conv_id : set(keys of all childnodes eligible for a reply) }
     def getfollowupnodes(self, convstate):
-        followupnodes = []
-        mostrecentquestions = {}  # { conv_id : mostrecentquestion, conv_i.. }
+        followupnodes = {}
         for conv_id in convstate:
-            followupnodes
-            mostrecentquestions[conv_id] = convstate[conv_id]['mostrecentquestion']
-
-        #for conv_id in self.conversationtrees:
-
+            followupnodes[conv_id] = self.getchildnodes(conv_id, convstate[conv_id]['mostrecentquestion'])
+        return followupnodes
 
     def getchildnodes(self, conv_id, node):
         if conv_id in self.conversationtrees:

@@ -27,8 +27,6 @@ class TestCase(unittest.TestCase):
 
 class TestResponseBuilderGraph(unittest.TestCase):
 
-
-
     def setUp(self):
         self.sampleconversationtrees = {
             1: {123: set([124, 126]), 124: set([125]), 125: set([]),
@@ -104,6 +102,16 @@ class TestResponseBuilderGraph(unittest.TestCase):
         self.assertEqual(self.rbg.getchildnodes(1, 999), [])
         self.assertEqual(self.rbg.getchildnodes(2, 132), set([135]))
         self.assertEqual(self.rbg.getchildnodes(999, 1), [])
+
+    def test_getfollowupnodes(self):
+        sampleconvstates = self.sd.getsampleconversationstates()
+        self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['bob']),
+                         {1: set([125]), 2: set([133, 134])})
+        self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['hank']),
+                         {1: set([]), 2: []})
+        self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['ann']),
+                {999: []})
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)
 unittest.TextTestRunner(verbosity=2).run(suite)
