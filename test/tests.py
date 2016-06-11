@@ -27,71 +27,72 @@ class TestCase(unittest.TestCase):
 
 class TestResponseBuilderGraph(unittest.TestCase):
 
-    sampleconversations = {}
+
 
     def setUp(self):
-        self.sampleconversations = {
-            1: {'a': set(['b', 'c']), 'b': set('d'), 'c': set(['e', 'f']),
-                'd': set(), 'e': set(), 'f': set('g'), 'g': set()},
-            2: {'a': set(['c', 'b']), 'b': set(['d', 'e']), 'c': set('f'),
-                'd': set(), 'e': set(), 'f': set()},
-            3: {'a': set(['c', 'b']), 'b': set([]), 'c': set([])}
-            }
+        self.sampleconversationtrees = {
+            1: {123: set([124, 126]), 124: set([125]), 125: set([]),
+                126: set([127, 128]), 127: set([]), 128: set([129]), 129: set([])},
+            2: {130: set([131, 132]), 131: set([133, 134]), 132: set([135]),
+                133: set([]), 134: set([]), 135: set([])}}
         self.rbg = ResponseBuilderGraph()
-        self.rbg.setconversations(self.sampleconversations)
+        self.rbg.setconversations(self.sampleconversationtrees)
         self.sd = Sampledata()
         self.messages = self.sd.getgraphmessages()
 
     def test_is_child(self):
-        self.assertTrue(self.rbg.is_child(1, 'c', 'f'))
-        self.assertTrue(self.rbg.is_child(1, 'a', 'b'))
-        self.assertTrue(self.rbg.is_child(2, 'b', 'e'))
-        self.assertFalse(self.rbg.is_child(1, 'd', 'c'))
-        self.assertFalse(self.rbg.is_child(1, 'g', 'f'))
-        self.assertFalse(self.rbg.is_child(2, 'x', 'z'))
+        self.assertTrue(self.rbg.is_child(1, 123, 124))
+        self.assertTrue(self.rbg.is_child(1, 124, 125))
+        self.assertTrue(self.rbg.is_child(2, 132, 135))
+        self.assertFalse(self.rbg.is_child(1, 124, 123))
+        self.assertFalse(self.rbg.is_child(1, 125, 123))
+        self.assertFalse(self.rbg.is_child(2, 999, 123))
 
     def test_add_node(self):
-        self.rbg.add_node(1, 'x')
-        self.assertTrue(type(self.rbg.conversationtrees[1]['x']) == Set)
-        self.rbg.add_node(1, 'a')
-        self.assertTrue(self.rbg.conversationtrees[1]['a'] ==
-                        set(['c', 'b']))
+        self.rbg.add_node(1, 234)
+        self.assertTrue(type(self.rbg.conversationtrees[1][234]) == Set)
+        self.rbg.add_node(1, 123)
+        self.assertTrue(self.rbg.conversationtrees[1][123] ==
+                        set([124, 126]))
 
     def test_remove_node(self):
-        remove_result = {'a': set(['c', 'b']), 'b': set(['d']), 'd': set([])}
-        self.rbg.remove_node(1, 'c')
+        remove_result = {123: set([124, 126]), 124: set([125]), 125: set([])}
+        self.rbg.remove_node(1, 126)
         self.assertEqual(self.rbg.conversationtrees[1], remove_result)
 
-        self.rbg.remove_node(1, 'b')
-        remove_result = {'a': set(['c', 'b'])}
+        remove_result = {123: set([124, 126])}
+        self.rbg.remove_node(1, 124)
+        self.assertEqual(self.rbg.conversationtrees[1], remove_result)
+
+        self.rbg.remove_node(1, 999)
+        self.rbg.remove_node(999, 1)
         self.assertEqual(self.rbg.conversationtrees[1], remove_result)
 
     def test_remove_edge(self):
-        remove_edge_result = {'a': set(['c']), 'c': set(['e', 'f']),
-                              'b': set(['d']), 'e': set([]), 'd': set([]),
-                              'g': set([]), 'f': set(['g'])}
-        self.rbg.remove_edge(1, 'b')
+        remove_edge_result = {
+            123: set([126]), 124: set([125]), 125: set([]),
+            126: set([127, 128]), 127: set([]), 128: set([129]), 129: set([])}
+        self.rbg.remove_edge(1, 124)
         self.assertEqual(self.rbg.conversationtrees[1], remove_edge_result)
 
         self.rbg.remove_edge(1, 'DOESNT EXIST')  # result should not change
         self.assertEqual(self.rbg.conversationtrees[1], remove_edge_result)
 
     def test_add_edge(self):
-        add_edge_result = {'a': set(['c', 'b', 'z']), 'b': set([]),
-                           'c': set([])}
-        self.rbg.add_edge(3, 'a', 'z')
-        self.assertEqual(self.rbg.conversationtrees[3], add_edge_result)
+        add_edge_result = {128: set([129]), 129: set([]), 123: set([124, 125, 126]),
+        124: set([125]), 125: set([]), 126: set([128, 127]), 127: set([])}
+        self.rbg.add_edge(1, 123, 125)
+        self.assertEqual(self.rbg.conversationtrees[1], add_edge_result)
 
-        self.rbg.add_edge(3, 'a', 'c')  # already exists, result should not change
-        self.assertEqual(self.rbg.conversationtrees[3], add_edge_result)
+        self.rbg.add_edge(1, 123, 124)  # already exists, result should not change
+        self.assertEqual(self.rbg.conversationtrees[1], add_edge_result)
 
     def test_buildconversationtrees(self):
-        convtreesresult = { 1:
-            {123: set([124, 126]), 124: set([125]), 125: set([]),
-             126: set([127, 128]), 127: set([]), 128: set([129]), 129: set([])},
-            2:
-            {130: set([131, 132]), 131: set([133, 134]), 132: set([135]),
-             133: set([]), 134: set([]), 135: set([])}}
+        convtreesresult = {
+            1: {123: set([124, 126]), 124: set([125]), 125: set([]),
+                126: set([127, 128]), 127: set([]), 128: set([129]), 129: set([])},
+            2: {130: set([131, 132]), 131: set([133, 134]), 132: set([135]),
+                133: set([]), 134: set([]), 135: set([])}}
         self.assertEqual(self.rbg.buildconversationtrees(self.messages), convtreesresult)
 
     def test_getrootnodes(self):
@@ -99,10 +100,10 @@ class TestResponseBuilderGraph(unittest.TestCase):
         self.assertEqual(self.rbg.getrootnodes(self.messages), rootnodes)
 
     def test_getchildnodes(self):
-        self.assertEqual(self.rbg.getchildnodes(1, 123), [124, 126])
-        self.assertEqual(self.rbg.getchildnodres(1, 999), [])
-        self.assertEqual(self.rbg.getchildnodres(2, 132), [135])
-        self.assertEqual(self.rbg.getchildnodres(999, 1), [])
+        self.assertEqual(self.rbg.getchildnodes(1, 123), set([124, 126]))
+        self.assertEqual(self.rbg.getchildnodes(1, 999), [])
+        self.assertEqual(self.rbg.getchildnodes(2, 132), set([135]))
+        self.assertEqual(self.rbg.getchildnodes(999, 1), [])
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)
 unittest.TextTestRunner(verbosity=2).run(suite)

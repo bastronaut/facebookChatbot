@@ -1,13 +1,17 @@
 '''
-Building responses is too complex. Better to model a conversation as a tree
-graph. Also try using pep standard from now on.
+WORK IN PROGRESS, this class will soon phase out responseBuilder class
 
-Start building all tree graph methods, then probably abstract them away
-with chatbot behavior calls. Will use adjacency list for this.
-https://en.wikipedia.org/wiki/Adjacency_list
-The tree is considered a directed graph (single root node)
-Adjacency list is an unordered list of nodes with a set of neighbouring nodes.
-tree graph t:
+Conversations are modeled as a directed (tree) graph. Each message
+question/response is a node in the graph. An edge between the nodes in a
+conversation are follow-up messages. In order to reach a certain node in the
+graph, all of its parent nodes must have been 'asked' by the user.
+
+Now, instead of checking in all of the messages whether there is a match,
+we simply traverse the tree from their mostrecent message in each conversation,
+check if there is a match only in the child nodes attached to their most recent
+message. If so, reply with the child's response, and update mostrecentmessage
+
+t =
         a
      /      \
     b         c
@@ -17,43 +21,12 @@ tree graph t:
                 g
 t = { a : (b, c), b : (d), c: (e, f), d: set()}
 
-data struct:
-convs = {
-    conv_id : { conv_name: 'name', tree: t },
-    conv_id : { conv_name: 'name', tree: t },
-    ...
-    }
-
-Stored as document per conv id in db:
-convs = [
-        {conv_id : { conv_name: 'name', tree: t}},
-        {conv_id : { conv_name: 'name', tree: t}},
-        ...
-        ]
-
-maybe make a node class. Class will be the following:
-
-class Node:
-    self.key = ''
-    self.children = []
-    self.parent = node, maybe not necessary? can only store children?
-
-    def __init__(self, key, children, parent):
-        self.key = key
-        self.children = children
-        self.parent = parent
-
-how to find the root node with this? problem with not storing the
-order of nodes? if they are not stored in order this will be a pain.
-only if parent is maintained, and it references 'root'  or something
-similar?
-
-tree = node(a, [node(b, [node(d, null, b)], 1), node(c, [], 1)], 0)..
-
-Now, instead of checking in all of the messages whether there is a match,
-we simply traverse the tree from their mostrecent message in each conversation,
-check if there is a match only in the child nodes attached to their most recent
-message. If so, reply with the child response, and update mostrecentmessage
+sampleconversationtree = {
+            1: {123: set([124, 126]), 124: set([125]), 125: set([]),
+                126: set([127, 128]), 127: set([]), 128: set([129]), 129: set([])},
+            2: {130: set([131, 132]), 131: set([133, 134]), 132: set([135]),
+                133: set([]), 134: set([]), 135: set([])}
+            }
 
 Tree methods to implement:
 is_child(G, x, y): tests whether there is an edge from parent node x to child y
@@ -96,13 +69,16 @@ class ResponseBuilderGraph:
             self.conversationtrees[conv_id][node_id] = Set([])
 
     # will recursively delete a node and all its child components
+    # however, it will not delete references to itself as edges!
     def remove_node(self, conv_id, node):
-        if node in self.conversationtrees[conv_id]:
-            if self.conversationtrees[conv_id][node]:
-                for childnode in self.conversationtrees[conv_id][node]:
-                    self.remove_node(conv_id, childnode)
-            del self.conversationtrees[conv_id][node]
+        if conv_id in self.conversationtrees:
+            if node in self.conversationtrees[conv_id]:
+                if self.conversationtrees[conv_id][node]:
+                    for childnode in self.conversationtrees[conv_id][node]:
+                        self.remove_node(conv_id, childnode)
+                del self.conversationtrees[conv_id][node]
 
+    # should be called whenever a node is removed. Otherwise, edges 
     def remove_edge(self, conv_id, edge):
         for node in self.conversationtrees[conv_id]:
             if edge in self.conversationtrees[conv_id][node]:
@@ -140,16 +116,24 @@ class ResponseBuilderGraph:
                 rootnodes[message['conv_id']] = message['key']
         return rootnodes
 
+    # The child nodes of the most recently asked question of a user are the
+    # messages that are eligible for a reply. Fn returns:
+    # { conv_id : set(keys of all childnodes eligible for a reply) }
     def getfollowupnodes(self, convstate):
         followupnodes = []
-        mostrecentquestions = []
+        mostrecentquestions = {}  # { conv_id : mostrecentquestion, conv_i.. }
         for conv_id in convstate:
-            mostrecentquestions.append(convstate[conv_id]['mostrecentquestion'])
+            followupnodes
+            mostrecentquestions[conv_id] = convstate[conv_id]['mostrecentquestion']
+
+        #for conv_id in self.conversationtrees:
+
 
     def getchildnodes(self, conv_id, node):
-        childnodes = []
         if conv_id in self.conversationtrees:
-            self.conversationtrees[conv_id]
+            if node in self.conversationtrees[conv_id]:
+                return self.conversationtrees[conv_id][node]
+        return []
 
 
     def getresponseformessages(self, message):
@@ -172,5 +156,3 @@ class ResponseBuilderGraph:
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
     rbg.buildconversationtrees(rbg.messages)
-
-    print '####################\nThe start is:\n', rbg.conversations[1]
