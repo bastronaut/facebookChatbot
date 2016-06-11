@@ -1,6 +1,7 @@
 from sets import Set
 from database.sampledata import Sampledata
 from chatbot.responseBuilderGraph import ResponseBuilderGraph
+from chatbot.messageEntity import MessageEntity
 import server
 import unittest
 
@@ -99,19 +100,54 @@ class TestResponseBuilderGraph(unittest.TestCase):
 
     def test_getchildnodes(self):
         self.assertEqual(self.rbg.getchildnodes(1, 123), set([124, 126]))
-        self.assertEqual(self.rbg.getchildnodes(1, 999), [])
+        self.assertEqual(self.rbg.getchildnodes(1, 999), None)
         self.assertEqual(self.rbg.getchildnodes(2, 132), set([135]))
-        self.assertEqual(self.rbg.getchildnodes(999, 1), [])
+        self.assertEqual(self.rbg.getchildnodes(999, 1), None)
 
     def test_getfollowupnodes(self):
         sampleconvstates = self.sd.getsampleconversationstates()
         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['bob']),
                          {1: set([125]), 2: set([133, 134])})
         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['hank']),
-                         {1: set([]), 2: []})
+                         {1: set([]), 2: None})
         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['ann']),
-                {999: []})
+                {999: None})
 
+    def test_getresponseformessages(self):
+        messageone = MessageEntity('bob', 'Hi')
+        messagetwo = MessageEntity('bob', 'Not great...')
+        messagetree = MessageEntity('bob', 'Feeling tired')
+        messagefour = MessageEntity('bob', 'I will!')
+        messagefive = MessageEntity('bob', 'Good!')
+        messagesix = MessageEntity('bob', '')
+        messageseven = MessageEntity('bob', 'BLABLABLA999')
+        messageeight = MessageEntity('bob', '130')
+        messagenine = MessageEntity('bob', '135')
+        # first question in a conversation
+        self.assertEqual(self.rbg.getresponseformessages(messageone),
+                         'Hi! :) How are you?')
+        # the followup question
+        self.assertEqual(self.rbg.getresponseformessages(messagetwo),
+                         'How come?')
+        # a repeated message should not receive another reply
+        self.assertFalse(self.rbg.getresponseformessages(messagetwo))
+        # the followup question after a repeated message should
+        self.assertEqual(self.rbg.getresponseformessages(messagetree),
+                         'Aww. Get some sleep!')
+        # the final message in the chain
+        self.assertEqual(self.rbg.getresponseformessages(messagefour),
+                         'Good night!')
+        # the second question repeated
+        self.assertFalse(self.rbg.getresponseformessages(messagefive))
+        # testing messages that do not occur
+        self.assertFalse(self.rbg.getresponseformessages(messagesix))
+        self.assertFalse(self.rbg.getresponseformessages(messageseven))
+        # first message in another conversation
+        self.assertEqual(self.rbg.getresponseformessages(messageeight), '130')
+        self.assertEqual(self.rbg.getresponseformessages(messageone),
+                         'Hi! :) How are you?')
+        # parent messages have not yet been answered                 
+        self.assertFalse(self.rbg.getresponseformessages(messagenine))
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)
 unittest.TextTestRunner(verbosity=2).run(suite)

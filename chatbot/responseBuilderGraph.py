@@ -43,14 +43,25 @@ from database.sampledata import Sampledata
 class ResponseBuilderGraph:
 
     def __init__(self):
+        self.conversationstates = {}
         self.sd = Sampledata()
         self.messages = self.sd.getgraphmessages()
+        self.messagesdict = self.createmessagesdictbykey(self.messages)
         self.conversationtrees = self.buildconversationtrees(self.messages)
         self.rootnotes = self.getrootnodes(self.messages)
+        self.resetmsg = 'chatreset'
+
+    # Create a dict representation of all the stored messages for quick
+    # lookup and references. messagedict =
+    # { key: { entiremessage}, key2: {entiremessage} }
+    def createmessagesdictbykey(self, messages):
+        messagedict = {}
+        for message in messages:
+            messagedict[message['key']] = message
+        return messagedict
 
     def buildconversationtrees(self, messages):
         conversationtrees = {}
-
         for message in messages:
             conversationtrees.setdefault(message['conv_id'], {})
             conversationtrees[message['conv_id']][message['key']] = set(message['children'])
@@ -117,15 +128,55 @@ class ResponseBuilderGraph:
         if conv_id in self.conversationtrees:
             if node in self.conversationtrees[conv_id]:
                 return self.conversationtrees[conv_id][node]
-        return []
+        return None
 
+    def replaceEscapedCharacters(self, message):
+      escapedMessage = self.escapeTextPattern(message, '$', '&#36;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '<', '&#60')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '>', '&#62;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '\'', '&#39;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '"', '&#34;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '\\', '&#92;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '/', '&#47;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, '[', '&#91;')
+      escapedMessage = self.escapeTextPattern(escapedMessage, ':', '&#58;')
+      print '\n## the escaped msg:', escapedMessage
+      return escapedMessage
+
+    def escapeTextPattern(self, input, pattern, replacewith):
+        return input.replace(pattern, replacewith)
+
+    # in order to find whether the incoming message warrants a response,
+    # we compare it only to the messages that are eligible to receive a
+    # response rather than the whole set of messages
+    def getmessagematches(self, incomingmessage, eligiblemessages, messagedict):
+        matches = []
+        for msgkey in eligiblemessages:
+            loweredmessage = messagedict[msgkey]['qtext'].lower()
+            if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)
+                         or loweredmessage == incomingmessage):
+                matches.append(msgkey)
+        return matches
 
     def getresponseformessages(self, message):
-        # find which message ids warrant a response
-        #   all the first message ids in a tree
-        #   the edges connected to the node of their most recent messages
-        # check whether one of these messages matches the incoming message
-        # if so, return the response
+        returnResponses = []
+        messageSender = message.getFrom()
+        try:
+            message = message.getBody().lower()
+        except Exception, e:
+            logging.info(['Fail getBody, probably different msg Type (e.g. media). Error: ', e])
+            return returnResponses
+
+        if message == self.resetmsg:
+            self.reinitialize(messageSender)
+            return False
+
+        message = self.replaceEscapedCharacters(message)
+
+        rootnodes = self.getrootnodes(self.messages)
+        followupnodes = self.getfollowupnodes(self.conversationstates)
+
+
         return
 
 # TODO:
