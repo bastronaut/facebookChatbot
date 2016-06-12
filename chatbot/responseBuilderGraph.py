@@ -38,6 +38,7 @@ remove_edge(G, x, y): removes the edge from  vertices x to y, if it is there;
 '''
 from sets import Set
 from database.sampledata import Sampledata
+import re
 
 
 class ResponseBuilderGraph:
@@ -116,14 +117,17 @@ class ResponseBuilderGraph:
         return rootnodes
 
     # The child nodes of the most recently asked question of a user are the
-    # messages that are eligible for a reply. Function returns: [key, key, ..]
+    # msgs that warrant a reply. Function returns:
+    # conv_id : set(keys of all childnodes eligible for a reply) }
     def getfollowupnodes(self, convstate):
-        followupnodes = []
+        followupnodes = {}
+        print 'zeh convstateL' , convstate
         for conv_id in convstate:
             childnodes = self.getchildnodes(conv_id, convstate[conv_id]['mostrecentquestion'])
             if childnodes is not None:
-                for key in childnodes:
-                    followupnodes.append(key)
+                followupnodes[conv_id] = childnodes
+            else:
+                followupnodes[conv_id] = None
         return followupnodes
 
     def getchildnodes(self, conv_id, node):
@@ -132,6 +136,20 @@ class ResponseBuilderGraph:
                 return self.conversationtrees[conv_id][node]
         return None
 
+    def geteligiblemessages(self, rootnodes, followupnodes):
+        eligiblemessages = []
+        print '\n##########################the followupnoes:\n', followupnodes, '\n', followupnodes
+        for node in rootnodes:
+            eligiblemessages.append(rootnodes[node])
+        for childnodesets in followupnodes:
+            print 'childnodesets:', childnodesets
+            for node in followupnodes[childnodesets]:
+                eligiblemessages.append(node)
+        print 'returning..', eligiblemessages
+        return eligiblemessages
+
+    # messages in DB are escaped into unicode for security. Incomning msgs
+    # are similarly escaped here to ensure a good comparison
     def replaceEscapedCharacters(self, message):
       escapedMessage = self.escapeTextPattern(message, '$', '&#36;')
       escapedMessage = self.escapeTextPattern(escapedMessage, '<', '&#60')
@@ -151,13 +169,21 @@ class ResponseBuilderGraph:
     # we compare it only to the messages that are eligible to receive a
     # response rather than the whole set of messages
     def getmessagematches(self, incomingmessage, eligiblemessages, messagedict):
+        print '\n\nincomingmessage:', incomingmessage
+        print '\n\neligble message:', eligiblemessages
+        print '\n\nmessagedict:', messagedict, '\n\n'
         matches = []
         for msgkey in eligiblemessages:
+            print '\n\nthe msgkey:', msgkey, '\n\n'
             loweredmessage = messagedict[msgkey]['qtext'].lower()
             if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)
                          or loweredmessage == incomingmessage):
                 matches.append(msgkey)
         return matches
+
+    # temp for test purposes
+    def setconversationstates(self, convstates):
+        self.conversationstates = convstates
 
     def getresponseformessages(self, message):
         returnResponses = []
@@ -165,20 +191,20 @@ class ResponseBuilderGraph:
         try:
             message = message.getBody().lower()
         except Exception, e:
-            logging.info(['Fail getBody, probably different msg Type (e.g. media). Error: ', e])
+            logging.info(['Fail getBody, will not work for Media messages:', e])
             return returnResponses
 
         if message == self.resetmsg:
             self.reinitialize(messageSender)
             return False
 
-        message = self.replaceEscapedCharacters(message)
-
+        escapedmessage = self.replaceEscapedCharacters(message)
         rootnodes = self.getrootnodes(self.messages)
-        followupnodes = self.getfollowupnodes(self.conversationstates)
-
-
-        return
+        followupnodes = self.getfollowupnodes(self.conversationstates[messageSender])
+        eligiblemessages = self.geteligiblemessages(rootnodes, followupnodes)
+        matches = self.getmessagematches(escapedmessage, eligiblemessages,
+                                         self.messagesdict)
+        return matches
 
 # TODO:
 # the python script will not be responsible for inserting and maintaining
@@ -194,3 +220,4 @@ if __name__ == "__main__":
     rbg.buildconversationtrees(rbg.messages)
     sampleconvstates = rbg.sd.getsampleconversationstates()
     rbg.getfollowupnodes(sampleconvstates['hank'])
+    rbg.geteligiblemessages(rbg.getrootnodes(rbg.messages), rbg.getfollowupnodes(sampleconvstates))

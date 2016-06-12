@@ -107,11 +107,11 @@ class TestResponseBuilderGraph(unittest.TestCase):
     def test_getfollowupnodes(self):
         sampleconvstates = self.sd.getsampleconversationstates()
         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['bob']),
-                        [125, 133, 134])
+                         {1: set([125]), 2: set([133, 134])})
         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['hank']),
-                         [])
+                         {1: set([]), 2: None})
         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['ann']),
-                [])
+                         {999: None})
 
     def test_getresponseformessages(self):
         messageone = MessageEntity('bob', 'Hi')
@@ -123,6 +123,8 @@ class TestResponseBuilderGraph(unittest.TestCase):
         messageseven = MessageEntity('bob', 'BLABLABLA999')
         messageeight = MessageEntity('bob', '130')
         messagenine = MessageEntity('bob', '135')
+        sampleconvstates = self.sd.getsampleconversationstates()
+        self.rbg.setconversationstates(sampleconvstates)
         # first question in a conversation
         self.assertEqual(self.rbg.getresponseformessages(messageone),
                          'Hi! :) How are you?')

@@ -1,0 +1,138 @@
+[1mdiff --git a/chatbot/responseBuilderGraph.py b/chatbot/responseBuilderGraph.py[m
+[1mindex 35cb843..20bc230 100755[m
+[1m--- a/chatbot/responseBuilderGraph.py[m
+[1m+++ b/chatbot/responseBuilderGraph.py[m
+[36m@@ -38,6 +38,7 @@[m [mremove_edge(G, x, y): removes the edge from  vertices x to y, if it is there;[m
+ '''[m
+ from sets import Set[m
+ from database.sampledata import Sampledata[m
+[32m+[m[32mimport re[m
+ [m
+ [m
+ class ResponseBuilderGraph:[m
+[36m@@ -116,14 +117,17 @@[m [mclass ResponseBuilderGraph:[m
+         return rootnodes[m
+ [m
+     # The child nodes of the most recently asked question of a user are the[m
+[31m-    # messages that are eligible for a reply. Function returns: [key, key, ..][m
+[32m+[m[32m    # msgs that warrant a reply. Function returns:[m
+[32m+[m[32m    # conv_id : set(keys of all childnodes eligible for a reply) }[m
+     def getfollowupnodes(self, convstate):[m
+[31m-        followupnodes = [][m
+[32m+[m[32m        followupnodes = {}[m
+[32m+[m[32m        print 'zeh convstateL' , convstate[m
+         for conv_id in convstate:[m
+             childnodes = self.getchildnodes(conv_id, convstate[conv_id]['mostrecentquestion'])[m
+             if childnodes is not None:[m
+[31m-                for key in childnodes:[m
+[31m-                    followupnodes.append(key)[m
+[32m+[m[32m                followupnodes[conv_id] = childnodes[m
+[32m+[m[32m            else:[m
+[32m+[m[32m                followupnodes[conv_id] = None[m
+         return followupnodes[m
+ [m
+     def getchildnodes(self, conv_id, node):[m
+[36m@@ -132,6 +136,20 @@[m [mclass ResponseBuilderGraph:[m
+                 return self.conversationtrees[conv_id][node][m
+         return None[m
+ [m
+[32m+[m[32m    def geteligiblemessages(self, rootnodes, followupnodes):[m
+[32m+[m[32m        eligiblemessages = [][m
+[32m+[m[32m        print '\n##########################the followupnoes:\n', followupnodes, '\n', followupnodes[m
+[32m+[m[32m        for node in rootnodes:[m
+[32m+[m[32m            eligiblemessages.append(rootnodes[node])[m
+[32m+[m[32m        for childnodesets in followupnodes:[m
+[32m+[m[32m            print 'childnodesets:', childnodesets[m
+[32m+[m[32m            for node in followupnodes[childnodesets]:[m
+[32m+[m[32m                eligiblemessages.append(node)[m
+[32m+[m[32m        print 'returning..', eligiblemessages[m
+[32m+[m[32m        return eligiblemessages[m
+[32m+[m
+[32m+[m[32m    # messages in DB are escaped into unicode for security. Incomning msgs[m
+[32m+[m[32m    # are similarly escaped here to ensure a good comparison[m
+     def replaceEscapedCharacters(self, message):[m
+       escapedMessage = self.escapeTextPattern(message, '$', '&#36;')[m
+       escapedMessage = self.escapeTextPattern(escapedMessage, '<', '&#60')[m
+[36m@@ -151,34 +169,42 @@[m [mclass ResponseBuilderGraph:[m
+     # we compare it only to the messages that are eligible to receive a[m
+     # response rather than the whole set of messages[m
+     def getmessagematches(self, incomingmessage, eligiblemessages, messagedict):[m
+[32m+[m[32m        print '\n\nincomingmessage:', incomingmessage[m
+[32m+[m[32m        print '\n\neligble message:', eligiblemessages[m
+[32m+[m[32m        print '\n\nmessagedict:', messagedict, '\n\n'[m
+         matches = [][m
+         for msgkey in eligiblemessages:[m
+[32m+[m[32m            print '\n\nthe msgkey:', msgkey, '\n\n'[m
+             loweredmessage = messagedict[msgkey]['qtext'].lower()[m
+             if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)[m
+                          or loweredmessage == incomingmessage):[m
+                 matches.append(msgkey)[m
+         return matches[m
+ [m
+[32m+[m[32m    # temp for test purposes[m
+[32m+[m[32m    def setconversationstates(self, convstates):[m
+[32m+[m[32m        self.conversationstates = convstates[m
+[32m+[m
+     def getresponseformessages(self, message):[m
+         returnResponses = [][m
+         messageSender = message.getFrom()[m
+         try:[m
+             message = message.getBody().lower()[m
+         except Exception, e:[m
+[31m-            logging.info(['Fail getBody, probably different msg Type (e.g. media). Error: ', e])[m
+[32m+[m[32m            logging.info(['Fail getBody, will not work for Media messages:', e])[m
+             return returnResponses[m
+ [m
+         if message == self.resetmsg:[m
+             self.reinitialize(messageSender)[m
+             return False[m
+ [m
+[31m-        message = self.replaceEscapedCharacters(message)[m
+[31m-[m
+[32m+[m[32m        escapedmessage = self.replaceEscapedCharacters(message)[m
+         rootnodes = self.getrootnodes(self.messages)[m
+[31m-        followupnodes = self.getfollowupnodes(self.conversationstates)[m
+[31m-[m
+[31m-[m
+[31m-        return[m
+[32m+[m[32m        followupnodes = self.getfollowupnodes(self.conversationstates[messageSender])[m
+[32m+[m[32m        eligiblemessages = self.geteligiblemessages(rootnodes, followupnodes)[m
+[32m+[m[32m        matches = self.getmessagematches(escapedmessage, eligiblemessages,[m
+[32m+[m[32m                                         self.messagesdict)[m
+[32m+[m[32m        return matches[m
+ [m
+ # TODO:[m
+ # the python script will not be responsible for inserting and maintaining[m
+[36m@@ -194,3 +220,4 @@[m [mif __name__ == "__main__":[m
+     rbg.buildconversationtrees(rbg.messages)[m
+     sampleconvstates = rbg.sd.getsampleconversationstates()[m
+     rbg.getfollowupnodes(sampleconvstates['hank'])[m
+[32m+[m[32m    rbg.geteligiblemessages(rbg.getrootnodes(rbg.messages), rbg.getfollowupnodes(sampleconvstates))[m
+[1mdiff --git a/test/tests.py b/test/tests.py[m
+[1mindex b1a63c3..350deea 100755[m
+[1m--- a/test/tests.py[m
+[1m+++ b/test/tests.py[m
+[36m@@ -107,11 +107,11 @@[m [mclass TestResponseBuilderGraph(unittest.TestCase):[m
+     def test_getfollowupnodes(self):[m
+         sampleconvstates = self.sd.getsampleconversationstates()[m
+         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['bob']),[m
+[31m-                        [125, 133, 134])[m
+[32m+[m[32m                         {1: set([125]), 2: set([133, 134])})[m
+         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['hank']),[m
+[31m-                         [])[m
+[32m+[m[32m                         {1: set([]), 2: None})[m
+         self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['ann']),[m
+[31m-                [])[m
+[32m+[m[32m                         {999: None})[m
+ [m
+     def test_getresponseformessages(self):[m
+         messageone = MessageEntity('bob', 'Hi')[m
+[36m@@ -123,6 +123,8 @@[m [mclass TestResponseBuilderGraph(unittest.TestCase):[m
+         messageseven = MessageEntity('bob', 'BLABLABLA999')[m
+         messageeight = MessageEntity('bob', '130')[m
+         messagenine = MessageEntity('bob', '135')[m
+[32m+[m[32m        sampleconvstates = self.sd.getsampleconversationstates()[m
+[32m+[m[32m        self.rbg.setconversationstates(sampleconvstates)[m
+         # first question in a conversation[m
+         self.assertEqual(self.rbg.getresponseformessages(messageone),[m
+                          'Hi! :) How are you?')[m
