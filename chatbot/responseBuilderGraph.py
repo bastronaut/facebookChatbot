@@ -116,12 +116,14 @@ class ResponseBuilderGraph:
         return rootnodes
 
     # The child nodes of the most recently asked question of a user are the
-    # messages that are eligible for a reply. Function returns:
-    # { conv_id : set(keys of all childnodes eligible for a reply) }
+    # messages that are eligible for a reply. Function returns: [key, key, ..]
     def getfollowupnodes(self, convstate):
-        followupnodes = {}
+        followupnodes = []
         for conv_id in convstate:
-            followupnodes[conv_id] = self.getchildnodes(conv_id, convstate[conv_id]['mostrecentquestion'])
+            childnodes = self.getchildnodes(conv_id, convstate[conv_id]['mostrecentquestion'])
+            if childnodes is not None:
+                for key in childnodes:
+                    followupnodes.append(key)
         return followupnodes
 
     def getchildnodes(self, conv_id, node):
@@ -140,7 +142,6 @@ class ResponseBuilderGraph:
       escapedMessage = self.escapeTextPattern(escapedMessage, '/', '&#47;')
       escapedMessage = self.escapeTextPattern(escapedMessage, '[', '&#91;')
       escapedMessage = self.escapeTextPattern(escapedMessage, ':', '&#58;')
-      print '\n## the escaped msg:', escapedMessage
       return escapedMessage
 
     def escapeTextPattern(self, input, pattern, replacewith):
@@ -191,3 +192,5 @@ class ResponseBuilderGraph:
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
     rbg.buildconversationtrees(rbg.messages)
+    sampleconvstates = rbg.sd.getsampleconversationstates()
+    rbg.getfollowupnodes(sampleconvstates['hank'])
