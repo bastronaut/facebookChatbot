@@ -35,11 +35,23 @@ remove_node(G, x): removes the node x, if it is there;
 add_edge(G, x, y): adds the edge from the vertices x to y, if it is not there;
 remove_edge(G, x, y): removes the edge from  vertices x to y, if it is there;
 
+
+new conversationstates = {
+    m.getFrom() : {
+        conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr},
+        conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr},
+        conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr}},
+    m.getFrom() : {
+        conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr},
+        conv_id : { mostrecentinteraction: timestamp, mostrecentquestion: question_nr}
+        }
+}
+
 '''
 from sets import Set
 from database.sampledata import Sampledata
 import re
-
+from datetime import time, tzinfo, datetime, timedelta
 
 class ResponseBuilderGraph:
 
@@ -90,7 +102,8 @@ class ResponseBuilderGraph:
                         self.remove_node(conv_id, childnode)
                 del self.conversationtrees[conv_id][node]
 
-    # should be called whenever a node is removed. Otherwise, edges
+    # should be called whenever a node is removed. Otherwise, edges are kept
+    # in place while the nodes no longer exist
     def remove_edge(self, conv_id, edge):
         for node in self.conversationtrees[conv_id]:
             if edge in self.conversationtrees[conv_id][node]:
@@ -119,9 +132,9 @@ class ResponseBuilderGraph:
     # The child nodes of the most recently asked question of a user are the
     # msgs that warrant a reply. Function returns:
     # conv_id : set(keys of all childnodes eligible for a reply) }
-    def getfollowupnodes(self, convstate):
+    def getfollowupnodes(self, messageSender):
         followupnodes = {}
-        print 'zeh convstateL' , convstate
+        convstate = self.conversationstates.setdefault(messageSender, {})
         for conv_id in convstate:
             childnodes = self.getchildnodes(conv_id, convstate[conv_id]['mostrecentquestion'])
             if childnodes is not None:
@@ -136,16 +149,15 @@ class ResponseBuilderGraph:
                 return self.conversationtrees[conv_id][node]
         return None
 
+    # Flattens the eligilbe msgs: the list of rootnodes and the list with sets
+    #  of followupnodes. Returns [ msgkey, msgkey, msgkey, ...]
     def geteligiblemessages(self, rootnodes, followupnodes):
         eligiblemessages = []
-        print '\n##########################the followupnoes:\n', followupnodes, '\n', followupnodes
         for node in rootnodes:
             eligiblemessages.append(rootnodes[node])
         for childnodesets in followupnodes:
-            print 'childnodesets:', childnodesets
             for node in followupnodes[childnodesets]:
                 eligiblemessages.append(node)
-        print 'returning..', eligiblemessages
         return eligiblemessages
 
     # messages in DB are escaped into unicode for security. Incomning msgs
@@ -169,13 +181,10 @@ class ResponseBuilderGraph:
     # we compare it only to the messages that are eligible to receive a
     # response rather than the whole set of messages
     def getmessagematches(self, incomingmessage, eligiblemessages, messagedict):
-        print '\n\nincomingmessage:', incomingmessage
-        print '\n\neligble message:', eligiblemessages
-        print '\n\nmessagedict:', messagedict, '\n\n'
         matches = []
         for msgkey in eligiblemessages:
-            print '\n\nthe msgkey:', msgkey, '\n\n'
             loweredmessage = messagedict[msgkey]['qtext'].lower()
+            # print 'loweredmessage:', loweredmessage, 'for key:', incomingmessage, msgkey
             if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)
                          or loweredmessage == incomingmessage):
                 matches.append(msgkey)
@@ -184,6 +193,16 @@ class ResponseBuilderGraph:
     # temp for test purposes
     def setconversationstates(self, convstates):
         self.conversationstates = convstates
+
+    def updateconversationstate(self, messageSender, conv_id, msgkey):
+        self.conversationstates.setdefault(messageSender, {})
+        self.conversationstates[messageSender].setdefault(conv_id, {})
+        self.conversationstates[messageSender][conv_id] = {'mostrecentinteraction': datetime.utcnow(), 'mostrecentquestion': msgkey }
+
+    # TODO
+    def reinitialize(self, messageSender):
+        print 'REINITIALIZE STILL TODO'
+        return
 
     def getresponseformessages(self, message):
         returnResponses = []
@@ -200,11 +219,17 @@ class ResponseBuilderGraph:
 
         escapedmessage = self.replaceEscapedCharacters(message)
         rootnodes = self.getrootnodes(self.messages)
-        followupnodes = self.getfollowupnodes(self.conversationstates[messageSender])
+        followupnodes = self.getfollowupnodes(messageSender)
         eligiblemessages = self.geteligiblemessages(rootnodes, followupnodes)
         matches = self.getmessagematches(escapedmessage, eligiblemessages,
                                          self.messagesdict)
-        return matches
+
+        if matches:
+            for match in matches:
+                self.updateconversationstate(messageSender, self.messagesdict[match]['conv_id'], match)
+                returnResponses.append({'responseText' : self.messagesdict[match]['rtext']})
+
+        return returnResponses
 
 # TODO:
 # the python script will not be responsible for inserting and maintaining

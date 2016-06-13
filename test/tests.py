@@ -106,11 +106,12 @@ class TestResponseBuilderGraph(unittest.TestCase):
 
     def test_getfollowupnodes(self):
         sampleconvstates = self.sd.getsampleconversationstates()
-        self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['bob']),
+        self.rbg.setconversationstates(sampleconvstates)
+        self.assertEqual(self.rbg.getfollowupnodes('bob'),
                          {1: set([125]), 2: set([133, 134])})
-        self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['hank']),
+        self.assertEqual(self.rbg.getfollowupnodes('hank'),
                          {1: set([]), 2: None})
-        self.assertEqual(self.rbg.getfollowupnodes(sampleconvstates['ann']),
+        self.assertEqual(self.rbg.getfollowupnodes('ann'),
                          {999: None})
 
     def test_getresponseformessages(self):
@@ -123,31 +124,32 @@ class TestResponseBuilderGraph(unittest.TestCase):
         messageseven = MessageEntity('bob', 'BLABLABLA999')
         messageeight = MessageEntity('bob', '130')
         messagenine = MessageEntity('bob', '135')
-        sampleconvstates = self.sd.getsampleconversationstates()
-        self.rbg.setconversationstates(sampleconvstates)
+        # sampleconvstates = self.sd.getsampleconversationstates()
+        # self.rbg.setconversationstates(sampleconvstates)
         # first question in a conversation
         self.assertEqual(self.rbg.getresponseformessages(messageone),
-                         'Hi! :) How are you?')
+                         [{'responseText': 'Hi! :) How are you?'}])
         # the followup question
         self.assertEqual(self.rbg.getresponseformessages(messagetwo),
-                         'How come?')
+                         [{'responseText': 'How come?'}])
         # a repeated message should not receive another reply
         self.assertFalse(self.rbg.getresponseformessages(messagetwo))
         # the followup question after a repeated message should
         self.assertEqual(self.rbg.getresponseformessages(messagetree),
-                         'Aww. Get some sleep!')
+                         [{'responseText': 'Aww. Get some sleep!'}])
         # the final message in the chain
         self.assertEqual(self.rbg.getresponseformessages(messagefour),
-                         'Good night!')
+                         [{'responseText': 'Good night!'}])
         # the second question repeated
         self.assertFalse(self.rbg.getresponseformessages(messagefive))
         # testing messages that do not occur
         self.assertFalse(self.rbg.getresponseformessages(messagesix))
         self.assertFalse(self.rbg.getresponseformessages(messageseven))
         # first message in another conversation
-        self.assertEqual(self.rbg.getresponseformessages(messageeight), '130')
+        self.assertEqual(self.rbg.getresponseformessages(messageeight),
+                         [{'responseText': '130'}])
         self.assertEqual(self.rbg.getresponseformessages(messageone),
-                         'Hi! :) How are you?')
+                         [{'responseText': 'Hi! :) How are you?'}])
         # parent messages have not yet been answered
         self.assertFalse(self.rbg.getresponseformessages(messagenine))
 
