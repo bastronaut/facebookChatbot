@@ -210,7 +210,7 @@ class ResponseBuilderGraph:
         try:
             message = message.getBody().lower()
         except Exception, e:
-            logging.info(['Fail getBody, will not work for Media messages:', e])
+            print 'Fail getBody, will not work for Media messages:', e
             return returnResponses
 
         if message == self.resetmsg:

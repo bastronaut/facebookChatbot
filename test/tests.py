@@ -113,6 +113,8 @@ class TestResponseBuilderGraph(unittest.TestCase):
                          {1: set([]), 2: None})
         self.assertEqual(self.rbg.getfollowupnodes('ann'),
                          {999: None})
+        self.assertEqual(self.rbg.getfollowupnodes('999'),
+                         {})
 
     def test_getresponseformessages(self):
         messageone = MessageEntity('bob', 'Hi')
@@ -152,6 +154,26 @@ class TestResponseBuilderGraph(unittest.TestCase):
                          [{'responseText': 'Hi! :) How are you?'}])
         # parent messages have not yet been answered
         self.assertFalse(self.rbg.getresponseformessages(messagenine))
+
+    def test_updateconversationstate(self):
+        return
+
+    # test if conversationstate is correctly updated after incoming an message
+    def test_updatedconvstateaftermessage(self):
+        sampleconvstates = self.sd.getsampleconversationstates()
+        self.rbg.setconversationstates(sampleconvstates)
+        # valid example, should update conv state
+        message = MessageEntity('bob', 'Good!')
+        self.rbg.getresponseformessages(message)
+        self.assertEqual(self.rbg.conversationstates['bob'][1]['mostrecentquestion'], 124)
+        # invalid example, should not update conv state
+        message = MessageEntity('bob', 'I will!')
+        self.rbg.getresponseformessages(message)
+        self.assertEqual(self.rbg.conversationstates['bob'][1]['mostrecentquestion'], 124)
+        # invalid example, should not update conv state
+        message = MessageEntity('bob', '999')
+        self.rbg.getresponseformessages(message)
+        self.assertEqual(self.rbg.conversationstates['bob'][1]['mostrecentquestion'], 124)
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)
 unittest.TextTestRunner(verbosity=2).run(suite)
