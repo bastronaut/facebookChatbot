@@ -160,23 +160,6 @@ class ResponseBuilderGraph:
                 eligiblemessages.append(node)
         return eligiblemessages
 
-    # messages in DB are escaped into unicode for security. Incomning msgs
-    # are similarly escaped here to ensure a good comparison
-    def replaceEscapedCharacters(self, message):
-      escapedMessage = self.escapeTextPattern(message, '$', '&#36;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '<', '&#60')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '>', '&#62;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '\'', '&#39;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '"', '&#34;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '\\', '&#92;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '/', '&#47;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, '[', '&#91;')
-      escapedMessage = self.escapeTextPattern(escapedMessage, ':', '&#58;')
-      return escapedMessage
-
-    def escapeTextPattern(self, input, pattern, replacewith):
-        return input.replace(pattern, replacewith)
-
     # in order to find whether the incoming message warrants a response,
     # we compare it only to the messages that are eligible to receive a
     # response rather than the whole set of messages
@@ -190,14 +173,11 @@ class ResponseBuilderGraph:
                 matches.append(msgkey)
         return matches
 
-    # temp for test purposes
-    def setconversationstates(self, convstates):
-        self.conversationstates = convstates
-
     def updateconversationstate(self, messageSender, conv_id, msgkey):
         self.conversationstates.setdefault(messageSender, {})
         self.conversationstates[messageSender].setdefault(conv_id, {})
-        self.conversationstates[messageSender][conv_id] = {'mostrecentinteraction': datetime.utcnow(), 'mostrecentquestion': msgkey }
+        self.conversationstates[messageSender][conv_id] = {'mostrecentinteraction': datetime.utcnow(),
+                                                           'mostrecentquestion': msgkey }
 
     # TODO
     def reinitialize(self, messageSender):
@@ -208,16 +188,16 @@ class ResponseBuilderGraph:
         returnResponses = []
         messageSender = message.getFrom()
         try:
-            message = message.getBody().lower()
+            messagetext = message.getBody().lower()
         except Exception, e:
             print 'Fail getBody, will not work for Media messages:', e
             return returnResponses
 
-        if message == self.resetmsg:
+        if messagetext == self.resetmsg:
             self.reinitialize(messageSender)
             return False
 
-        escapedmessage = self.replaceEscapedCharacters(message)
+        escapedmessage = message.replaceEscapedCharacters(messagetext)
         rootnodes = self.getrootnodes(self.messages)
         followupnodes = self.getfollowupnodes(messageSender)
         eligiblemessages = self.geteligiblemessages(rootnodes, followupnodes)
@@ -231,14 +211,10 @@ class ResponseBuilderGraph:
 
         return returnResponses
 
-# TODO:
-# the python script will not be responsible for inserting and maintaining
-# the tree. the nodejs script will be inserting and updating the treeself.
-# therefore, we have to add it to the node api. we have to store it in such a way
-# that it can easily be parsed and serialized into a tree
-# possible options: https://docs.mongodb.com/manual/applications/data-models-tree-structures/
-# probably the child reference model:
-# https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-child-references/
+    # entrance for test cases
+    def setconversationstates(self, convstates):
+        self.conversationstates = convstates
+
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()

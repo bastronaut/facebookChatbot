@@ -156,7 +156,14 @@ class TestResponseBuilderGraph(unittest.TestCase):
         self.assertFalse(self.rbg.getresponseformessages(messagenine))
 
     def test_updateconversationstate(self):
-        return
+        from datetime import time, tzinfo, datetime, timedelta
+        self.rbg.updateconversationstate('bob', 1, 1)
+        self.assertEqual(self.rbg.conversationstates['bob'][1]['mostrecentquestion'], 1)
+        self.assertIsInstance(self.rbg.conversationstates['bob'][1]['mostrecentinteraction'], datetime)
+        oldtimestamp = self.rbg.conversationstates['bob'][1]['mostrecentinteraction']
+        self.rbg.updateconversationstate('bob', 1, 999)
+        self.assertEqual(self.rbg.conversationstates['bob'][1]['mostrecentquestion'], 999)
+        self.assertNotEqual(oldtimestamp, self.rbg.conversationstates['bob'][1]['mostrecentinteraction'])
 
     # test if conversationstate is correctly updated after incoming an message
     def test_updatedconvstateaftermessage(self):
