@@ -57,16 +57,17 @@ class ResponseBuilderGraph:
 
     def __init__(self):
         self.conversationstates = {}
+        # TODO: replace getting test messages with DB messages.
+        # insert the correct data struct messages into db first
         self.sd = Sampledata()
         self.messages = self.sd.getgraphmessages()
         self.messagesdict = self.createmessagesdictbykey(self.messages)
         self.conversationtrees = self.buildconversationtrees(self.messages)
-        self.rootnotes = self.getrootnodes(self.messages)
-        self.resetmsg = 'chatreset'
+        self.RESETMESSAGE = 'chatreset'
 
     # Create a dict representation of all the stored messages for quick
     # lookup and references. messagedict =
-    # { key: { entiremessage}, key2: {entiremessage} }
+    # { msgkey: { entiremessage}, msgkey2: {entiremessage2}, .. }
     def createmessagesdictbykey(self, messages):
         messagedict = {}
         for message in messages:
@@ -93,7 +94,7 @@ class ResponseBuilderGraph:
             self.conversationtrees[conv_id][node_id] = Set([])
 
     # will recursively delete a node and all its child components
-    # however, it will not delete references to itself as edges!
+    # however, it will not delete references to its edges!
     def remove_node(self, conv_id, node):
         if conv_id in self.conversationtrees:
             if node in self.conversationtrees[conv_id]:
@@ -115,12 +116,6 @@ class ResponseBuilderGraph:
             return
         else:
             self.conversationtrees[conv_id][node].add(edge)
-
-    def setconversations(self, conversations):
-        self.conversationtrees = conversations
-
-    def getmatches(self, message):
-        return
 
     def getrootnodes(self, messages):
         rootnodes = {}
@@ -160,14 +155,18 @@ class ResponseBuilderGraph:
                 eligiblemessages.append(node)
         return eligiblemessages
 
-    # in order to find whether the incoming message warrants a response,
-    # we compare it only to the messages that are eligible to receive a
-    # response rather than the whole set of messages
+    # In order to find whether the incoming message warrants a response,
+    # we compare it only to messages that are eligible for a response.
+    # PROBLEMATIC: because of the way RE \b works, this has some problems when
+    # the sentence ends/begins with special characters. Example:
+    # r'\b' + 'Not great...' + r'\b' will not match 'xx Not great... xx'
+    # need to test impact of stripping characters before matching, but is nasty
+    # workaround
+    , has some problems with matching
     def getmessagematches(self, incomingmessage, eligiblemessages, messagedict):
         matches = []
         for msgkey in eligiblemessages:
             loweredmessage = messagedict[msgkey]['qtext'].lower()
-            # print 'loweredmessage:', loweredmessage, 'for key:', incomingmessage, msgkey
             if (re.search(r'\b' + loweredmessage + r'\b', incomingmessage)
                          or loweredmessage == incomingmessage):
                 matches.append(msgkey)
@@ -179,9 +178,9 @@ class ResponseBuilderGraph:
         self.conversationstates[messageSender][conv_id] = {'mostrecentinteraction': datetime.utcnow(),
                                                            'mostrecentquestion': msgkey }
 
-    # TODO
     def reinitialize(self, messageSender):
-        print 'REINITIALIZE STILL TODO'
+        if messageSender in self.conversationstates:
+            self.conversationstates[messageSender] = {}
         return
 
     def getresponseformessages(self, message):
@@ -193,28 +192,26 @@ class ResponseBuilderGraph:
             print 'Fail getBody, will not work for Media messages:', e
             return returnResponses
 
-        if messagetext == self.resetmsg:
+        if messagetext == self.RESETMESSAGE:
             self.reinitialize(messageSender)
             return False
 
-        escapedmessage = message.replaceEscapedCharacters(messagetext)
         rootnodes = self.getrootnodes(self.messages)
         followupnodes = self.getfollowupnodes(messageSender)
         eligiblemessages = self.geteligiblemessages(rootnodes, followupnodes)
-        matches = self.getmessagematches(escapedmessage, eligiblemessages,
-                                         self.messagesdict)
+
+        escapedmessage = message.replaceEscapedCharacters(messagetext)
+        matches = self.getmessagematches(escapedmessage, eligiblemessages, self.messagesdict)
 
         if matches:
             for match in matches:
                 self.updateconversationstate(messageSender, self.messagesdict[match]['conv_id'], match)
                 returnResponses.append({'responseText' : self.messagesdict[match]['rtext']})
-
         return returnResponses
 
     # entrance for test cases
     def setconversationstates(self, convstates):
         self.conversationstates = convstates
-
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()

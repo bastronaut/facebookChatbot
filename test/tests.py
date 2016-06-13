@@ -35,7 +35,7 @@ class TestResponseBuilderGraph(unittest.TestCase):
             2: {130: set([131, 132]), 131: set([133, 134]), 132: set([135]),
                 133: set([]), 134: set([]), 135: set([])}}
         self.rbg = ResponseBuilderGraph()
-        self.rbg.setconversations(self.sampleconversationtrees)
+        # self.rbg.setconversations(self.sampleconversationtrees)
         self.sd = Sampledata()
         self.messages = self.sd.getgraphmessages()
 
@@ -116,9 +116,9 @@ class TestResponseBuilderGraph(unittest.TestCase):
         self.assertEqual(self.rbg.getfollowupnodes('999'),
                          {})
 
-    def test_getresponseformessages(self):
+    def test_getresponseformatchingmessages(self):
         messageone = MessageEntity('bob', 'Hi')
-        messagetwo = MessageEntity('bob', 'Not great...')
+        messagetwo = MessageEntity('bob', 'Not great')
         messagetree = MessageEntity('bob', 'Feeling tired')
         messagefour = MessageEntity('bob', 'I will!')
         messagefive = MessageEntity('bob', 'Good!')
@@ -126,8 +126,7 @@ class TestResponseBuilderGraph(unittest.TestCase):
         messageseven = MessageEntity('bob', 'BLABLABLA999')
         messageeight = MessageEntity('bob', '130')
         messagenine = MessageEntity('bob', '135')
-        # sampleconvstates = self.sd.getsampleconversationstates()
-        # self.rbg.setconversationstates(sampleconvstates)
+
         # first question in a conversation
         self.assertEqual(self.rbg.getresponseformessages(messageone),
                          [{'responseText': 'Hi! :) How are you?'}])
@@ -155,6 +154,17 @@ class TestResponseBuilderGraph(unittest.TestCase):
         # parent messages have not yet been answered
         self.assertFalse(self.rbg.getresponseformessages(messagenine))
 
+    # tests slightly different messages that do not match letter for letter
+    def test_getresponseforpartialmatchingmessages(self):
+        messageone = MessageEntity('bob', 'Hi how are you today!')
+        messagetwo = MessageEntity('bob', 'Not great QQQ')
+        # first question in a conversation
+        self.assertEqual(self.rbg.getresponseformessages(messageone),
+                         [{'responseText': 'Hi! :) How are you?'}])
+        # the followup question
+        self.assertEqual(self.rbg.getresponseformessages(messagetwo),
+                         [{'responseText': 'How come?'}])
+
     def test_updateconversationstate(self):
         from datetime import time, tzinfo, datetime, timedelta
         self.rbg.updateconversationstate('bob', 1, 1)
@@ -181,6 +191,17 @@ class TestResponseBuilderGraph(unittest.TestCase):
         message = MessageEntity('bob', '999')
         self.rbg.getresponseformessages(message)
         self.assertEqual(self.rbg.conversationstates['bob'][1]['mostrecentquestion'], 124)
+
+    def test_reinitialize(self):
+        sampleconvstates = self.sd.getsampleconversationstates()
+        self.rbg.setconversationstates(sampleconvstates)
+        self.rbg.reinitialize('bob')
+        self.assertEqual(self.rbg.conversationstates['bob'], {})
+
+        self.rbg.setconversationstates(sampleconvstates)
+        message = MessageEntity('bob', 'chatreset')
+        self.rbg.getresponseformessages(message)
+        self.assertEqual(self.rbg.conversationstates['bob'], {})
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestResponseBuilderGraph)
 unittest.TextTestRunner(verbosity=2).run(suite)

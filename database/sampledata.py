@@ -19,6 +19,7 @@ Graphs:
 
 '''
 
+import copy
 
 class Sampledata:
 
@@ -38,7 +39,8 @@ class Sampledata:
         return self.testJSONS
 
     def getsampleconversationstates(self):
-        return self.sampleconversationstates
+        # prevent tests from mutating it by sending over deep copy
+        return copy.copy(self.sampleconversationstates)
 
     convs = [
         {"conv_id": 1, "conv_name": "example chat"},
@@ -61,7 +63,7 @@ class Sampledata:
         {"m_nr": 1, "qtext": "Hi", "rtext": "Hi! :) How are you?",  "conv_id": 1, "key": 123, "parent": 0, "children": [124, 126]},
         {"m_nr": 2, "qtext": "Good!", "rtext": "That's great to hear!", "conv_id": 1, "key": 124, "parent": 123, "children": [125]},
         {"m_nr": 3, "qtext": "Thanks!", "rtext": "No Problem!", "conv_id": 1, "key": 125, "parent": 124, "children": []},
-        {"m_nr": 4, "qtext": "Not great...", "rtext": "How come?", "conv_id": 1, "key": 126, "parent": 123, "children": [127, 128]},
+        {"m_nr": 4, "qtext": "Not great", "rtext": "How come?", "conv_id": 1, "key": 126, "parent": 123, "children": [127, 128]},
         {"m_nr": 5, "qtext": "Feeling sick", "rtext": "Aww. Get well soon!", "conv_id": 1, "key": 127, "parent": 126, "children": []},
         {"m_nr": 6, "qtext": "Feeling tired", "rtext": "Aww. Get some sleep!", "conv_id": 1, "key": 128, "parent": 126, "children": [129]},
         {"m_nr": 7, "qtext": "I will!", "rtext": "Good night!", "conv_id": 1, "key": 129, "parent": 128, "children": []},
