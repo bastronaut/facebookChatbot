@@ -106,7 +106,7 @@ class TestResponseBuilderGraph(unittest.TestCase):
 
     def test_getfollowupnodes(self):
         sampleconvstates = self.sd.getsampleconversationstates()
-        self.rbg.setconversationstates(sampleconvstates)
+        self.rbg.conversationstates = sampleconvstates
         self.assertEqual(self.rbg.getfollowupnodes('bob'),
                          {1: set([125]), 2: set([133, 134])})
         self.assertEqual(self.rbg.getfollowupnodes('hank'),
@@ -178,7 +178,7 @@ class TestResponseBuilderGraph(unittest.TestCase):
     # test if conversationstate is correctly updated after incoming an message
     def test_updatedconvstateaftermessage(self):
         sampleconvstates = self.sd.getsampleconversationstates()
-        self.rbg.setconversationstates(sampleconvstates)
+        self.rbg.conversationstates = sampleconvstates
         # valid example, should update conv state
         message = MessageEntity('bob', 'Good!')
         self.rbg.getresponseformessages(message)
@@ -194,11 +194,11 @@ class TestResponseBuilderGraph(unittest.TestCase):
 
     def test_reinitialize(self):
         sampleconvstates = self.sd.getsampleconversationstates()
-        self.rbg.setconversationstates(sampleconvstates)
+        self.rbg.conversationstates = sampleconvstates
         self.rbg.reinitialize('bob')
         self.assertEqual(self.rbg.conversationstates['bob'], {})
 
-        self.rbg.setconversationstates(sampleconvstates)
+        self.rbg.conversationstates = sampleconvstates
         message = MessageEntity('bob', 'chatreset')
         self.rbg.getresponseformessages(message)
         self.assertEqual(self.rbg.conversationstates['bob'], {})

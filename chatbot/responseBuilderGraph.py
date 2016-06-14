@@ -162,7 +162,6 @@ class ResponseBuilderGraph:
     # r'\b' + 'Not great...' + r'\b' will not match 'xx Not great... xx'
     # need to test impact of stripping characters before matching, but is nasty
     # workaround
-    , has some problems with matching
     def getmessagematches(self, incomingmessage, eligiblemessages, messagedict):
         matches = []
         for msgkey in eligiblemessages:
@@ -208,10 +207,6 @@ class ResponseBuilderGraph:
                 self.updateconversationstate(messageSender, self.messagesdict[match]['conv_id'], match)
                 returnResponses.append({'responseText' : self.messagesdict[match]['rtext']})
         return returnResponses
-
-    # entrance for test cases
-    def setconversationstates(self, convstates):
-        self.conversationstates = convstates
 
 if __name__ == "__main__":
     rbg = ResponseBuilderGraph()
